@@ -5,6 +5,7 @@ import AdminLayout from './components/Layout/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import UserDashboard from './pages/user/UserDashboard';
 import UserProfile from './pages/user/UserProfile';
+import Contact from './pages/user/Contact';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserList from './pages/admin/UserList';
 import ReviewCardApplication from './pages/admin/ReviewCardApplication';
@@ -21,9 +22,10 @@ function App() {
       <Router>
         <CustomToast />
         <Routes>
-        {/* Public Routes - Home page accessible to everyone */}
+        {/* Public Routes - Home page and contact accessible to everyone */}
         <Route path="/" element={<UserLayout />}>
           <Route index element={<UserDashboard />} />
+          <Route path="contact" element={<Contact />} />
         </Route>
         
         {/* User Routes - Protected for regular users */}

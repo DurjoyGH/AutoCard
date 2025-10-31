@@ -927,11 +927,279 @@ const sendNewAdminEmail = async (userEmail, userName, password) => {
   }
 };
 
+const sendContactConfirmationEmail = async (userEmail, userName, subject) => {
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: {
+        name: 'Library Card Generator',
+        address: process.env.EMAIL
+      },
+      to: userEmail,
+      subject: 'We received your message - Library Card Generator',
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Message Received</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                }
+                .container {
+                    background-color: #ffffff;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                    text-align: center;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #e0e0e0;
+                }
+                .success-badge {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-align: center;
+                    margin: 20px 0;
+                }
+                .info-box {
+                    background-color: #e8f4f8;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #3498db;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e0e0e0;
+                    color: #7f8c8d;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="color: #2c3e50; margin: 0;">Library Card Generator</h1>
+                    <p style="color: #7f8c8d; margin: 5px 0 0 0;">Digital Library Services</p>
+                </div>
+                
+                <div class="success-badge">
+                    <div style="font-size: 48px; margin-bottom: 10px;">✉️</div>
+                    <h2 style="margin: 0 0 10px 0;">Message Received!</h2>
+                    <p style="margin: 0; font-size: 16px;">We'll get back to you soon</p>
+                </div>
+                
+                <p>Dear ${userName},</p>
+                
+                <p>Thank you for contacting Library Card Generator. We have successfully received your message and our support team will review it shortly.</p>
+                
+                <div class="info-box">
+                    <h3 style="margin-top: 0; color: #2c3e50;">Message Details</h3>
+                    <p><strong>Subject:</strong> ${subject}</p>
+                    <p><strong>Received:</strong> ${new Date().toLocaleString()}</p>
+                    <p style="margin-bottom: 0;"><strong>Response Time:</strong> Within 24 hours</p>
+                </div>
+                
+                <p>We typically respond to all inquiries within 24 hours during our office hours (Saturday-Wednesday, 9 AM - 5 PM). For urgent matters, please contact us directly via phone.</p>
+                
+                <p><strong>What happens next?</strong></p>
+                <ul>
+                    <li>Our support team will review your message</li>
+                    <li>You'll receive a detailed response via email</li>
+                    <li>If needed, we may request additional information</li>
+                </ul>
+                
+                <p>In the meantime, you can explore our FAQ section or visit your dashboard for more information.</p>
+                
+                <div class="footer">
+                    <p><strong>Library Card Generator</strong><br>
+                    Digital Library Services<br>
+                    Email: ${process.env.EMAIL}</p>
+                    <p style="margin-top: 10px;">This is an automated confirmation. We'll reply to your inquiry soon.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+      `,
+      text: `Dear ${userName},\n\nThank you for contacting Library Card Generator. We have successfully received your message.\n\nSubject: ${subject}\nReceived: ${new Date().toLocaleString()}\nExpected Response: Within 24 hours\n\nOur support team will review your message and respond soon.\n\nBest regards,\nLibrary Card Generator Team`,
+      headers: {
+        'X-Priority': '3',
+        'X-MSMail-Priority': 'Normal',
+        'Importance': 'normal',
+        'X-Mailer': 'Library Card Generator System v1.0',
+        'Reply-To': process.env.EMAIL,
+      }
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Contact confirmation email sent successfully:', result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending contact confirmation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+const sendContactReplyEmail = async (userEmail, userName, originalSubject, originalMessage, replyMessage, adminName) => {
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: {
+        name: 'Library Card Generator Support',
+        address: process.env.EMAIL
+      },
+      to: userEmail,
+      subject: `Re: ${originalSubject}`,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Reply from Support Team</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                }
+                .container {
+                    background-color: #ffffff;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                    text-align: center;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #e0e0e0;
+                }
+                .reply-badge {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-align: center;
+                    margin: 20px 0;
+                }
+                .reply-box {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #764ba2;
+                }
+                .original-message {
+                    background-color: #e8f4f8;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #3498db;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e0e0e0;
+                    color: #7f8c8d;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="color: #2c3e50; margin: 0;">Library Card Generator</h1>
+                    <p style="color: #7f8c8d; margin: 5px 0 0 0;">Support Team Response</p>
+                </div>
+                
+                <div class="reply-badge">
+                    <div style="font-size: 48px; margin-bottom: 10px;">💬</div>
+                    <h2 style="margin: 0 0 10px 0;">Response to Your Inquiry</h2>
+                    <p style="margin: 0; font-size: 16px;">From our support team</p>
+                </div>
+                
+                <p>Dear ${userName},</p>
+                
+                <p>Thank you for contacting Library Card Generator. Our support team has reviewed your message and here's our response:</p>
+                
+                <div class="reply-box">
+                    <h3 style="margin-top: 0; color: #2c3e50;">Support Team Reply</h3>
+                    <p style="white-space: pre-wrap; margin: 0;">${replyMessage}</p>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0; color: #7f8c8d; font-size: 14px;">
+                        <p style="margin: 0;"><strong>Replied by:</strong> ${adminName}</p>
+                        <p style="margin: 5px 0 0 0;"><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+                    </div>
+                </div>
+                
+                <div class="original-message">
+                    <h4 style="margin-top: 0; color: #2c3e50;">Your Original Message</h4>
+                    <p><strong>Subject:</strong> ${originalSubject}</p>
+                    <p style="white-space: pre-wrap; margin: 10px 0 0 0;">${originalMessage}</p>
+                </div>
+                
+                <p>If you have any further questions or need additional assistance, please don't hesitate to reach out to us again.</p>
+                
+                <p>Thank you for using Library Card Generator!</p>
+                
+                <div class="footer">
+                    <p><strong>Library Card Generator</strong><br>
+                    Digital Library Services<br>
+                    Email: ${process.env.EMAIL}</p>
+                    <p style="margin-top: 10px;">You can reply to this email for further assistance.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+      `,
+      text: `Dear ${userName},\n\nThank you for contacting Library Card Generator. Here's our response to your inquiry:\n\n--- SUPPORT REPLY ---\n${replyMessage}\n\nReplied by: ${adminName}\nDate: ${new Date().toLocaleString()}\n\n--- YOUR ORIGINAL MESSAGE ---\nSubject: ${originalSubject}\n${originalMessage}\n\nIf you have any further questions, please contact us again.\n\nBest regards,\nLibrary Card Generator Team`,
+      headers: {
+        'X-Priority': '2',
+        'X-MSMail-Priority': 'Normal',
+        'Importance': 'normal',
+        'X-Mailer': 'Library Card Generator System v1.0',
+        'Reply-To': process.env.EMAIL,
+      }
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Contact reply email sent successfully:', result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending contact reply email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendApplicationApprovedEmail,
   sendApplicationRejectedEmail,
-  sendNewAdminEmail
+  sendNewAdminEmail,
+  sendContactConfirmationEmail,
+  sendContactReplyEmail
 };
