@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import UserLayout from './components/Layout/UserLayout';
 import AdminLayout from './components/Layout/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 import UserDashboard from './pages/user/UserDashboard';
 import UserProfile from './pages/user/UserProfile';
 import Contact from './pages/user/Contact';
@@ -21,6 +22,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <CustomToast />
         <Routes>
         {/* Public Routes - Home page and contact accessible to everyone */}

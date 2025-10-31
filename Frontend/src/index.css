@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* Smooth scrolling behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent white flicker during scroll */
+html, body {
+  background-color: #01161e;
+}
