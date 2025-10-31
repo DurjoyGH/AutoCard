@@ -39,6 +39,11 @@ const ReviewCardApplication = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [viewModal, setViewModal] = useState({ isOpen: false, application: null });
+  const [approveModal, setApproveModal] = useState({
+    isOpen: false,
+    application: null,
+    isApproving: false,
+  });
   const [rejectModal, setRejectModal] = useState({
     isOpen: false,
     application: null,
@@ -94,14 +99,38 @@ const ReviewCardApplication = () => {
     setFilteredApplications(filtered);
   };
 
-  const handleApprove = async (application) => {
+  const openApproveModal = (application) => {
+    setApproveModal({
+      isOpen: true,
+      application,
+      isApproving: false,
+    });
+  };
+
+  const closeApproveModal = () => {
+    setApproveModal({
+      isOpen: false,
+      application: null,
+      isApproving: false,
+    });
+  };
+
+  const handleApprove = async () => {
+    if (!approveModal.application) return;
+
     try {
-      await approveApplication(application._id);
-      showToast.success(`Application approved for ${application.name}`);
+      setApproveModal((prev) => ({ ...prev, isApproving: true }));
+      
+      await approveApplication(approveModal.application._id);
+      
+      showToast.success(`Application approved for ${approveModal.application.name}`);
+      
+      closeApproveModal();
       fetchApplications(); // Refresh list
     } catch (error) {
       console.error('Error approving application:', error);
       showToast.error(error.message || 'Failed to approve application');
+      setApproveModal((prev) => ({ ...prev, isApproving: false }));
     }
   };
 
@@ -387,7 +416,7 @@ const ReviewCardApplication = () => {
                     {application.status === 'pending' && (
                       <>
                         <button
-                          onClick={() => handleApprove(application)}
+                          onClick={() => openApproveModal(application)}
                           className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-all duration-200 flex items-center border border-green-500/20"
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
@@ -506,6 +535,54 @@ const ReviewCardApplication = () => {
                   <p className="text-red-400/80">{viewModal.application.rejectionReason}</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Confirmation Modal */}
+      {approveModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#01161e] border border-[#598392]/20 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/20 mx-auto mb-4">
+              <CheckCircle className="w-6 h-6 text-green-400" />
+            </div>
+
+            <h3 className="text-xl font-bold text-white text-center mb-2">
+              Approve Application
+            </h3>
+
+            <p className="text-[#598392]/80 text-center mb-6">
+              Are you sure you want to approve{' '}
+              <span className="text-white font-medium">{approveModal.application?.name}</span>'s
+              library card application? The applicant will receive an approval email with further instructions.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={closeApproveModal}
+                disabled={approveModal.isApproving}
+                className="flex-1 px-4 py-2 bg-[#598392]/10 text-[#598392] rounded-lg hover:bg-[#598392]/20 transition-all duration-200 font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApprove}
+                disabled={approveModal.isApproving}
+                className="flex-1 px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-all duration-200 font-medium border border-green-500/20 disabled:opacity-50 flex items-center justify-center"
+              >
+                {approveModal.isApproving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-green-400 mr-2"></div>
+                    Approving...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve & Send Email
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
