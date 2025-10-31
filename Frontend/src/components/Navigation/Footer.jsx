@@ -7,22 +7,12 @@ const Footer = () => {
   const quickLinks = [
     { name: 'Home', path: '/' },
     { name: 'Profile', path: '/profile' },
-    { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
 
-  const services = [
-    { name: 'Library Card Generator', path: '/generate' },
-    { name: 'Card Templates', path: '/templates' },
-    { name: 'Digital Cards', path: '/digital' },
-    { name: 'Print Services', path: '/print' },
-  ];
-
-  const support = [
-    { name: 'Help Center', path: '/help' },
-    { name: 'FAQ', path: '/faq' },
-    { name: 'Privacy Policy', path: '/privacy' },
-    { name: 'Terms of Service', path: '/terms' },
+  const authLinks = [
+    { name: 'Login', path: '/login' },
+    { name: 'Register', path: '/register' },
   ];
 
   const socialLinks = [
@@ -52,7 +42,7 @@ const Footer = () => {
     <footer className="bg-[#01161e] border-t border-[#598392]/20">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {/* Brand Section */}
           <div className="col-span-1 lg:col-span-1">
@@ -121,72 +111,26 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Auth Links */}
           <div>
             <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-6">
-              Services
+              Account
             </h3>
             <ul className="space-y-3">
-              {services.map((service) => (
-                <li key={service.name}>
+              {authLinks.map((link) => (
+                <li key={link.name}>
                   <Link
-                    to={service.path}
+                    to={link.path}
                     className="text-[#598392]/80 hover:text-white transition-colors duration-200 text-sm flex items-center group"
                   >
                     <svg className="w-3 h-3 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
-                    {service.name}
+                    {link.name}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-6">
-              Support
-            </h3>
-            <ul className="space-y-3">
-              {support.map((item) => (
-                <li key={item.name}>
-                  <Link
-                    to={item.path}
-                    className="text-[#598392]/80 hover:text-white transition-colors duration-200 text-sm flex items-center group"
-                  >
-                    <svg className="w-3 h-3 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Newsletter Section */}
-        <div className="mt-12 pt-8 border-t border-[#598392]/20">
-          <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
-            <div className="text-center lg:text-left">
-              <h3 className="text-white font-semibold text-lg mb-2">
-                Stay Updated
-              </h3>
-              <p className="text-[#598392]/80 text-sm">
-                Get the latest updates and new features delivered to your inbox.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full lg:w-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="px-4 py-2 bg-[#598392]/10 border border-[#598392]/20 rounded-lg text-white placeholder-[#598392]/60 focus:outline-none focus:ring-2 focus:ring-[#598392]/50 focus:border-transparent transition-all duration-200 flex-1 lg:w-64"
-              />
-              <button className="px-6 py-2 bg-gradient-to-r from-[#598392] to-[#124559] text-white rounded-lg font-medium hover:from-[#124559] hover:to-[#598392] transition-all duration-200 shadow-lg hover:shadow-[#598392]/25 whitespace-nowrap">
-                Subscribe
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -196,17 +140,11 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div className="text-[#598392]/60 text-sm text-center sm:text-left">
-              © {currentYear} AutoCard. All rights reserved. Built with ❤️ for libraries worldwide.
+              © {currentYear} AutoCard. All rights reserved. Jashore University of Science and Technology.
             </div>
             <div className="flex items-center space-x-6 text-sm">
-              <Link to="/privacy" className="text-[#598392]/60 hover:text-[#598392] transition-colors duration-200">
-                Privacy
-              </Link>
-              <Link to="/terms" className="text-[#598392]/60 hover:text-[#598392] transition-colors duration-200">
-                Terms
-              </Link>
-              <Link to="/cookies" className="text-[#598392]/60 hover:text-[#598392] transition-colors duration-200">
-                Cookies
+              <Link to="/contact" className="text-[#598392]/60 hover:text-[#598392] transition-colors duration-200">
+                Contact Us
               </Link>
             </div>
           </div>
