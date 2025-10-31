@@ -16,6 +16,7 @@ import {
   Home,
   IdCard,
   X,
+  GraduationCap,
 } from 'lucide-react';
 import {
   getAllApplications,
@@ -384,6 +385,10 @@ const ReviewCardApplication = () => {
                       {application.studentID}
                     </div>
                     <div className="flex items-center text-[#598392]/80">
+                      <GraduationCap className="w-4 h-4 mr-2" />
+                      {application.department || 'N/A'}
+                    </div>
+                    <div className="flex items-center text-[#598392]/80">
                       <Phone className="w-4 h-4 mr-2" />
                       {application.phoneNumber}
                     </div>
@@ -494,6 +499,10 @@ const ReviewCardApplication = () => {
                 <div>
                   <p className="text-[#598392]/70 text-sm">Student ID</p>
                   <p className="text-white font-medium">{viewModal.application.studentID}</p>
+                </div>
+                <div>
+                  <p className="text-[#598392]/70 text-sm">Department</p>
+                  <p className="text-white font-medium">{viewModal.application.department || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-[#598392]/70 text-sm">Phone Number</p>

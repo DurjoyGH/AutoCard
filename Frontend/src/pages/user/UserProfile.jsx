@@ -11,6 +11,7 @@ const UserProfile = () => {
     name: '',
     email: '',
     studentID: '',
+    department: '',
     hallName: '',
     phoneNumber: '',
     emergencyPhoneNumber: '',
@@ -47,7 +48,7 @@ const UserProfile = () => {
 
   // Calculate profile completion
   useEffect(() => {
-    const requiredFields = ['name', 'studentID', 'hallName', 'phoneNumber', 'emergencyPhoneNumber', 'district', 'bloodGroup'];
+    const requiredFields = ['name', 'studentID', 'department', 'hallName', 'phoneNumber', 'emergencyPhoneNumber', 'district', 'bloodGroup'];
     const filledFields = requiredFields.filter(field => formData[field] && formData[field].trim() !== '');
     const hasPhoto = photoPreview || formData.profilePicture;
     const hasSignature = signaturePreview || formData.signature;
@@ -72,6 +73,7 @@ const UserProfile = () => {
         name: user.name || '',
         email: user.email || '',
         studentID: user.studentID || '',
+        department: user.department || '',
         hallName: user.hallName || '',
         phoneNumber: user.phoneNumber || '',
         emergencyPhoneNumber: user.emergencyPhoneNumber || '',
@@ -101,6 +103,7 @@ const UserProfile = () => {
         name: userData.name || '',
         email: userData.email || '',
         studentID: userData.studentID || '',
+        department: userData.department || '',
         hallName: userData.hallName || '',
         phoneNumber: userData.phoneNumber || '',
         emergencyPhoneNumber: userData.emergencyPhoneNumber || '',
@@ -262,6 +265,7 @@ const UserProfile = () => {
     const requiredFields = {
       name: 'Full Name',
       studentID: 'Student ID',
+      department: 'Department',
       hallName: 'Hall Name',
       phoneNumber: 'Contact Number',
       emergencyPhoneNumber: 'Emergency Contact Number',
@@ -304,6 +308,7 @@ const UserProfile = () => {
       const profileData = {
         name: formData.name,
         studentID: formData.studentID,
+        department: formData.department,
         hallName: formData.hallName,
         phoneNumber: formData.phoneNumber,
         emergencyPhoneNumber: formData.emergencyPhoneNumber,
@@ -560,6 +565,22 @@ const UserProfile = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-[#598392]/10 border border-[#598392]/30 rounded-xl text-white placeholder-[#598392]/60 focus:outline-none focus:ring-2 focus:ring-[#598392]/50 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your student ID"
+                  required
+                />
+              </div>
+
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Department *
+                </label>
+                <input
+                  type="text"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-[#598392]/10 border border-[#598392]/30 rounded-xl text-white placeholder-[#598392]/60 focus:outline-none focus:ring-2 focus:ring-[#598392]/50 focus:border-transparent transition-all duration-200"
+                  placeholder="e.g., Computer Science & Engineering"
                   required
                 />
               </div>

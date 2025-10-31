@@ -74,6 +74,7 @@ const updateUserProfile = async (req, res) => {
     const {
       name,
       studentID,
+      department,
       hallName,
       phoneNumber,
       emergencyPhoneNumber,
@@ -94,6 +95,7 @@ const updateUserProfile = async (req, res) => {
     const updateData = {};
     if (name) updateData.name = name;
     if (studentID) updateData.studentID = studentID;
+    if (department) updateData.department = department;
     if (hallName) updateData.hallName = hallName;
     if (phoneNumber) updateData.phoneNumber = phoneNumber;
     if (emergencyPhoneNumber) updateData.emergencyPhoneNumber = emergencyPhoneNumber;

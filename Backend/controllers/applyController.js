@@ -16,6 +16,7 @@ exports.applyForCard = async (req, res) => {
     const requiredFields = [
       "name",
       "studentID",
+      "department",
       "hallName",
       "phoneNumber",
       "emergencyPhoneNumber",
@@ -48,6 +49,7 @@ exports.applyForCard = async (req, res) => {
       name: user.name,
       email: user.email,
       studentID: user.studentID,
+      department: user.department,
       hallName: user.hallName,
       phoneNumber: user.phoneNumber,
       emergencyPhoneNumber: user.emergencyPhoneNumber,
