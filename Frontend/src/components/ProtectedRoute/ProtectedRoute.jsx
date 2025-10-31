@@ -1,17 +1,9 @@
-import React, { useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { showToast } from '../Toast/CustomToast';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      showToast.error('Please login to access this page');
-    }
-  }, [isLoading, isAuthenticated]);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -34,9 +26,6 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   if (requiredRole && user?.role !== requiredRole) {
     // Redirect based on user's actual role
     const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : '/dashboard';
-    setTimeout(() => {
-      showToast.error(`Access denied. You don't have ${requiredRole} privileges.`);
-    }, 100);
     return <Navigate to={redirectPath} replace />;
   }
 

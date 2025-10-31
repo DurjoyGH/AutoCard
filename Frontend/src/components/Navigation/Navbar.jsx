@@ -28,7 +28,6 @@ const Navbar = () => {
     if (isAuthenticated) {
       // Logout logic
       await logout();
-      showToast.success('Logged out successfully');
       navigate('/');
     } else {
       // Navigate to login

@@ -16,7 +16,6 @@ const AdminLayout = () => {
 
   const handleLogout = () => {
     logout();
-    showToast.success('Logged out successfully');
     navigate('/login');
   };
 
