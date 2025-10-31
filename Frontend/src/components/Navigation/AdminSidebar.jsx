@@ -7,7 +7,8 @@ import {
   UserPlus,
   Home,
   Menu,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 
 const AdminSidebar = ({ isOpen, toggleSidebar }) => {
@@ -26,6 +27,11 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
       name: 'Review Card Application',
       path: '/admin/applications',
       icon: <FileText className="w-5 h-5" />
+    },
+    {
+      name: 'User Messages',
+      path: '/admin/messages',
+      icon: <MessageSquare className="w-5 h-5" />
     },
     {
       name: 'Add Admin',

@@ -10,6 +10,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserList from './pages/admin/UserList';
 import ReviewCardApplication from './pages/admin/ReviewCardApplication';
 import AddAdmin from './pages/admin/AddAdmin';
+import UserResponse from './pages/admin/UserResponse';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
@@ -49,6 +50,7 @@ function App() {
           <Route path="users" element={<UserList />} />
           <Route path="applications" element={<ReviewCardApplication />} />
           <Route path="add-admin" element={<AddAdmin />} />
+          <Route path="messages" element={<UserResponse />} />
         </Route>
         
         {/* Auth Routes (without layout) */}
