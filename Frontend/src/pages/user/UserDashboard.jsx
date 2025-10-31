@@ -1,243 +1,217 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import backgroundImage from '../../assets/just.jpg';
+import { ArrowRight, LogIn, UserPlus, Mail } from 'lucide-react';
 
 const UserDashboard = () => {
-  const [recentCards] = useState([
-    {
-      id: 1,
-      name: 'Student Library Card',
-      createdAt: '2025-10-10',
-      status: 'Active',
-      type: 'Student'
-    },
-    {
-      id: 2,
-      name: 'Faculty Access Card',
-      createdAt: '2025-10-08',
-      status: 'Pending',
-      type: 'Faculty'
-    },
-    {
-      id: 3,
-      name: 'Visitor Pass',
-      createdAt: '2025-10-05',
-      status: 'Expired',
-      type: 'Visitor'
-    }
-  ]);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
-  const stats = [
-    {
-      title: 'Total Cards',
-      value: '12',
-      icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
-      color: 'from-[#598392] to-[#124559]',
-      bgColor: 'bg-[#598392]/10'
-    },
-    {
-      title: 'Active Cards',
-      value: '8',
-      icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-      color: 'from-green-400 to-green-600',
-      bgColor: 'bg-green-400/10'
-    },
-    {
-      title: 'Pending Approval',
-      value: '3',
-      icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-      color: 'from-yellow-400 to-orange-500',
-      bgColor: 'bg-yellow-400/10'
-    },
-    {
-      title: 'Templates Used',
-      value: '5',
-      icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17v4a2 2 0 002 2h4m-6-6V9a2 2 0 012-2h2m0 0V5a2 2 0 012-2h4a2 2 0 012 2v2m0 0v4a2 2 0 01-2 2h-2m0 0h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z',
-      color: 'from-purple-400 to-purple-600',
-      bgColor: 'bg-purple-400/10'
-    }
-  ];
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Active':
-        return 'text-green-400 bg-green-400/10';
-      case 'Pending':
-        return 'text-yellow-400 bg-yellow-400/10';
-      case 'Expired':
-        return 'text-red-400 bg-red-400/10';
-      default:
-        return 'text-gray-400 bg-gray-400/10';
+  const handleApplyClick = () => {
+    if (isAuthenticated) {
+      navigate('/profile');
+    } else {
+      navigate('/login');
     }
   };
 
-  const quickActions = [
-    {
-      title: 'Generate New Card',
-      description: 'Create a new library card with custom template',
-      icon: 'M12 4v16m8-8H4',
-      color: 'from-[#598392] to-[#124559]',
-      link: '/generate'
-    },
-    {
-      title: 'Browse Templates',
-      description: 'Explore our collection of card templates',
-      icon: 'M19 11H5m14-7H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z',
-      color: 'from-blue-500 to-blue-700',
-      link: '/templates'
-    },
-    {
-      title: 'My Profile',
-      description: 'Update your personal information',
-      icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-      color: 'from-purple-500 to-purple-700',
-      link: '/profile'
-    }
-  ];
-
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#01161e] via-[#124559] to-[#598392] opacity-90"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-          <div className="text-center">
-            <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6">
-              Welcome to your
-              <span className="block bg-gradient-to-r from-[#598392] to-white bg-clip-text text-transparent">
-                AutoCard Dashboard
-              </span>
-            </h1>
-            <p className="text-xl text-[#598392]/80 max-w-3xl mx-auto leading-relaxed">
-              Manage your library cards, track applications, and generate new cards with ease. 
-              Your digital library management hub.
-            </p>
-          </div>
+      {/* Hero Section with Background Image */}
+      <div className="relative h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ 
+            backgroundImage: `url(${backgroundImage})`,
+          }}
+        >
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80"></div>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in">
+            Welcome to <span className="bg-gradient-to-r from-[#598392] to-[#AEC3B0] bg-clip-text text-transparent">AutoCard</span>
+          </h1>
+          
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white/90 mb-8">
+            Jashore University of Science & Technology
+          </h2>
+          
+          <p className="text-lg sm:text-xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Digital Library Card Generation System - Simplifying your library access
+          </p>
+
+          <button
+            onClick={handleApplyClick}
+            className="group px-10 py-4 bg-gradient-to-r from-[#598392] to-[#124559] text-white text-lg font-semibold rounded-full hover:from-[#124559] hover:to-[#598392] transition-all duration-300 shadow-2xl hover:shadow-[#598392]/50 transform hover:scale-105 flex items-center gap-3 mx-auto"
+          >
+            <span>Apply For Card</span>
+            <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+          </button>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
         </div>
       </div>
 
-      {/* Stats Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-[#01161e]/50 backdrop-blur-sm border border-[#598392]/20 rounded-xl p-6 hover:border-[#598392]/40 transition-all duration-300 group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} />
-                  </svg>
+      {/* About Section */}
+      <div className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Side - Details Text */}
+            <div className="space-y-6">
+              <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+                About <span className="bg-gradient-to-r from-[#598392] to-[#124559] bg-clip-text text-transparent">AutoCard</span>
+              </h2>
+              
+              <p className="text-lg text-[#598392]/90 leading-relaxed">
+                AutoCard is a modern digital library card generation system designed specifically for 
+                <strong className="text-white"> Jashore University of Science & Technology (JUST)</strong>. 
+                Our platform streamlines the process of obtaining and managing library cards, making it 
+                easier than ever for students and faculty to access library resources.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-4 bg-[#598392]/10 p-4 rounded-xl border border-[#598392]/20 hover:border-[#598392]/40 transition-all duration-300">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-[#598392] to-[#124559] rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-lg mb-1">Fast & Easy Process</h3>
+                    <p className="text-[#598392]/80 text-sm">Complete your application in minutes with our streamlined digital process.</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
-                    {stat.value}
+
+                <div className="flex items-start gap-4 bg-[#598392]/10 p-4 rounded-xl border border-[#598392]/20 hover:border-[#598392]/40 transition-all duration-300">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-[#598392] to-[#124559] rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-lg mb-1">Secure & Reliable</h3>
+                    <p className="text-[#598392]/80 text-sm">Your personal information is protected with industry-standard security measures.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 bg-[#598392]/10 p-4 rounded-xl border border-[#598392]/20 hover:border-[#598392]/40 transition-all duration-300">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-[#598392] to-[#124559] rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-lg mb-1">24/7 Access</h3>
+                    <p className="text-[#598392]/80 text-sm">Apply anytime, anywhere. Track your application status in real-time.</p>
                   </div>
                 </div>
               </div>
-              <h3 className="text-white font-medium text-sm">{stat.title}</h3>
-            </div>
-          ))}
-        </div>
 
-        {/* Quick Actions */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-8">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {quickActions.map((action, index) => (
-              <Link
-                key={index}
-                to={action.link}
-                className="group bg-[#01161e]/50 backdrop-blur-sm border border-[#598392]/20 rounded-xl p-6 hover:border-[#598392]/40 transition-all duration-300 hover:transform hover:scale-105"
-              >
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={action.icon} />
-                  </svg>
-                </div>
-                <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-[#598392] transition-colors duration-200">
-                  {action.title}
-                </h3>
-                <p className="text-[#598392]/70 text-sm leading-relaxed">
-                  {action.description}
+              <div className="pt-6">
+                <p className="text-[#598392]/80 text-base">
+                  Join thousands of JUST students and faculty members who have already simplified 
+                  their library access with AutoCard. Get started today and experience the future 
+                  of library management.
                 </p>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Cards */}
-        <div>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-white">Recent Cards</h2>
-            <Link
-              to="/cards"
-              className="text-[#598392] hover:text-white transition-colors duration-200 text-sm font-medium flex items-center space-x-1"
-            >
-              <span>View All</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
-          <div className="bg-[#01161e]/50 backdrop-blur-sm border border-[#598392]/20 rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-[#598392]/10">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#598392] uppercase tracking-wider">
-                      Card Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#598392] uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#598392] uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#598392] uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#598392] uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#598392]/10">
-                  {recentCards.map((card) => (
-                    <tr key={card.id} className="hover:bg-[#598392]/5 transition-colors duration-200">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-white font-medium">{card.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-[#598392]/80">{card.type}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-[#598392]/80">{card.createdAt}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(card.status)}`}>
-                          {card.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="flex space-x-2">
-                          <button className="text-[#598392] hover:text-white transition-colors duration-200">
-                            View
-                          </button>
-                          <button className="text-[#598392] hover:text-white transition-colors duration-200">
-                            Edit
-                          </button>
-                          <button className="text-red-400 hover:text-red-300 transition-colors duration-200">
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              </div>
             </div>
+
+            {/* Right Side - Action Buttons */}
+            <div className="space-y-6">
+              <div className="bg-gradient-to-br from-[#01161e]/80 to-[#124559]/80 backdrop-blur-xl border border-[#598392]/30 rounded-3xl p-8 shadow-2xl">
+                <h3 className="text-2xl font-bold text-white mb-6 text-center">Get Started</h3>
+                
+                <div className="space-y-4">
+                  {/* Login Button */}
+                  <Link
+                    to="/login"
+                    className="group w-full flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <LogIn className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold">Login</div>
+                        <div className="text-xs text-white/80">Access your account</div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                  </Link>
+
+                  {/* Signup Button */}
+                  <Link
+                    to="/register"
+                    className="group w-full flex items-center justify-between px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-green-500/50 transform hover:scale-105"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <UserPlus className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold">Sign Up</div>
+                        <div className="text-xs text-white/80">Create new account</div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                  </Link>
+
+                  {/* Contact Button */}
+                  <Link
+                    to="/contact"
+                    className="group w-full flex items-center justify-between px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-purple-500/50 transform hover:scale-105"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold">Contact Us</div>
+                        <div className="text-xs text-white/80">Get help & support</div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                  </Link>
+                </div>
+
+                {/* Info Box */}
+                <div className="mt-6 p-4 bg-[#598392]/10 border border-[#598392]/30 rounded-xl">
+                  <p className="text-[#598392]/90 text-sm text-center">
+                    <span className="font-semibold text-white">New to AutoCard?</span>
+                    <br />
+                    Sign up to create your account and apply for your library card.
+                  </p>
+                </div>
+              </div>
+
+              {/* Additional Info Card */}
+              <div className="bg-gradient-to-br from-[#598392]/20 to-[#124559]/20 backdrop-blur-xl border border-[#598392]/30 rounded-2xl p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-[#598392] to-[#124559] rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-white font-semibold text-lg">Need Help?</h4>
+                </div>
+                <p className="text-[#598392]/80 text-sm leading-relaxed">
+                  Our support team is available to assist you with any questions about the application process. 
+                  Feel free to reach out through our contact page.
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
