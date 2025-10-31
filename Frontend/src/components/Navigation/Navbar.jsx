@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { showToast } from '../Toast/CustomToast';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { isAuthenticated, logout, getUserName } = useAuth();
+  const { isAuthenticated, logout, getUserName, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -27,6 +28,7 @@ const Navbar = () => {
     if (isAuthenticated) {
       // Logout logic
       await logout();
+      showToast.success('Logged out successfully');
       navigate('/');
     } else {
       // Navigate to login
@@ -34,11 +36,16 @@ const Navbar = () => {
     }
   };
 
-  // Dynamic navigation items based on authentication status
+  // Dynamic navigation items based on authentication status and role
   const navItems = [
     { name: 'Home', path: '/', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-    // Only show Profile when user is authenticated
-    ...(isAuthenticated ? [{ name: 'Profile', path: '/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' }] : []),
+    // Show Dashboard for admin, Profile for user
+    ...(isAuthenticated 
+      ? user?.role === 'admin' 
+        ? [{ name: 'Dashboard', path: '/admin/dashboard', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2' }]
+        : [{ name: 'Profile', path: '/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' }]
+      : []
+    ),
   ];
 
   return (

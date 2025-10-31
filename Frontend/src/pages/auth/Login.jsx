@@ -58,9 +58,14 @@ const Login = () => {
         }
       );
 
-      // Redirect to dashboard after success
+      // Role-based redirection
+      const redirectPath = response.role === 'admin' 
+        ? '/admin/dashboard' 
+        : '/profile';
+
+      // Redirect based on user role
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(redirectPath);
         window.location.reload(); // Refresh to update auth state
       }, 1000);
 

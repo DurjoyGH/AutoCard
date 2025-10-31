@@ -1,8 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import UserLayout from './components/Layout/UserLayout';
+import AdminLayout from './components/Layout/AdminLayout';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import UserDashboard from './pages/user/UserDashboard';
 import UserProfile from './pages/user/UserProfile';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
@@ -15,12 +18,32 @@ function App() {
       <Router>
         <CustomToast />
         <Routes>
-        {/* User Routes */}
+        {/* Public Routes - Home page accessible to everyone */}
         <Route path="/" element={<UserLayout />}>
           <Route index element={<UserDashboard />} />
+        </Route>
+        
+        {/* User Routes - Protected for regular users */}
+        <Route path="/" element={
+          <ProtectedRoute requiredRole="user">
+            <UserLayout />
+          </ProtectedRoute>
+        }>
           <Route path="dashboard" element={<UserDashboard />} />
-          {/* Add more user routes here as needed */}
           <Route path="profile" element={<UserProfile />} />
+        </Route>
+        
+        {/* Admin Routes - Protected for admin users */}
+        <Route path="/admin" element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<div className="text-white">User List - Coming Soon</div>} />
+          <Route path="applications" element={<div className="text-white">Review Applications - Coming Soon</div>} />
+          <Route path="add-admin" element={<div className="text-white">Add Admin - Coming Soon</div>} />
         </Route>
         
         {/* Auth Routes (without layout) */}

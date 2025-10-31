@@ -113,7 +113,7 @@ exports.login = async (req, res) => {
       refreshToken: refreshToken,
       role: user.role,
       redirectTo:
-        user.role === "admin" ? "/admin/dashboard" : "/user/dashboard",
+        user.role === "admin" ? "/admin/dashboard" : "/profile",
     });
   } catch (err) {
     console.error(err);
@@ -156,6 +156,17 @@ exports.verifyUser = async (req, res) => {
       console.error("Failed to send welcome email:", welcomeEmailResult.error);
     }
 
+    // Generate token for verified user
+    const tokenPayload = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+    };
+
+    const token = generateToken(tokenPayload);
+    const refreshToken = generateRefreshToken({ id: user._id });
+
     res.status(200).json({
       message: "Account verified successfully!",
       user: {
@@ -165,9 +176,11 @@ exports.verifyUser = async (req, res) => {
         role: user.role,
         isVerified: user.isVerified,
       },
+      token: token,
+      refreshToken: refreshToken,
       role: user.role,
       redirectTo:
-        user.role === "admin" ? "/admin/dashboard" : "/user/dashboard",
+        user.role === "admin" ? "/admin/dashboard" : "/profile",
       welcomeEmailSent: welcomeEmailResult.success,
     });
   } catch (err) {
@@ -302,7 +315,7 @@ exports.getUserRole = async (req, res) => {
       role: user.role,
       permissions: rolePermissions[user.role] || [],
       redirectTo:
-        user.role === "admin" ? "/admin/dashboard" : "/user/dashboard",
+        user.role === "admin" ? "/admin/dashboard" : "/profile",
     });
   } catch (err) {
     console.error(err);

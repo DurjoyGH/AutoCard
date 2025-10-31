@@ -108,9 +108,9 @@ export const authApi = {
       
       // Store token and user data after successful verification
       if (data.user) {
-        // Generate a token or get it from response if backend provides one
-        // For now, we'll create a simple token indicator
-        localStorage.setItem('token', 'verified-user-token');
+        // Store token if provided, otherwise create a placeholder
+        const token = data.token || 'verified-user-token';
+        localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(data.user));
       }
       

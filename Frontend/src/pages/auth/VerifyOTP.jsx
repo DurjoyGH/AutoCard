@@ -94,7 +94,7 @@ const VerifyOTP = () => {
         verificationToken: otpString
       });
 
-      await showToast.promise(
+      const response = await showToast.promise(
         verifyPromise,
         {
           loading: 'Verifying your account...',
@@ -106,9 +106,14 @@ const VerifyOTP = () => {
       // Clear pending user data
       localStorage.removeItem('pendingUser');
 
-      // Redirect to dashboard
+      // Role-based redirection
+      const redirectPath = response.role === 'admin' 
+        ? '/admin/dashboard' 
+        : '/profile';
+
+      // Redirect based on user role
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(redirectPath);
         window.location.reload();
       }, 1000);
 
