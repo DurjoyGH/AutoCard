@@ -1,8 +1,10 @@
 const User = require("../models/user");
 const CardApplication = require("../models/cardApplication");
+const bcrypt = require("bcrypt");
 const {
   sendApplicationApprovedEmail,
   sendApplicationRejectedEmail,
+  sendNewAdminEmail,
 } = require("../services/email");
 
 // Get all users (admin only)
@@ -327,4 +329,70 @@ exports.deleteApplication = async (req, res) => {
     });
   }
 };
+
+// Create new admin (admin only)
+exports.createAdmin = async (req, res) => {
+  try {
+    const { name, email, password, phoneNumber } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email, and password are required",
+      });
+    }
+
+    // Check if user with this email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User with this email already exists",
+      });
+    }
+
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create new admin user
+    const newAdmin = new User({
+      name,
+      email,
+      password: hashedPassword,
+      phoneNumber: phoneNumber || "",
+      role: "admin",
+      isVerified: true, // Auto-verify admin users
+      verification: undefined, // No verification needed
+    });
+
+    await newAdmin.save();
+
+    // Send email with login credentials
+    const emailResult = await sendNewAdminEmail(email, name, password);
+
+    if (!emailResult.success) {
+      console.error("Failed to send admin welcome email:", emailResult.error);
+    }
+
+    res.status(201).json({
+      message: "Admin user created successfully",
+      admin: {
+        id: newAdmin._id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        phoneNumber: newAdmin.phoneNumber,
+        role: newAdmin.role,
+        isVerified: newAdmin.isVerified,
+      },
+      emailSent: emailResult.success,
+    });
+  } catch (error) {
+    console.error("Create admin error:", error);
+    res.status(500).json({
+      message: "Failed to create admin user",
+      error: error.message,
+    });
+  }
+};
+
 

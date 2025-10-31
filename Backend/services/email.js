@@ -710,10 +710,228 @@ const sendApplicationRejectedEmail = async (userEmail, userName, application, re
   }
 };
 
+const sendNewAdminEmail = async (userEmail, userName, password) => {
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: {
+        name: 'Library Card Generator',
+        address: process.env.EMAIL
+      },
+      to: userEmail,
+      subject: '🎉 Welcome to Library Card Generator - Admin Access Granted',
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Admin Account Created</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                }
+                .container {
+                    background-color: #ffffff;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                    text-align: center;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #e0e0e0;
+                }
+                .logo {
+                    font-size: 28px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    margin-bottom: 10px;
+                }
+                .welcome-badge {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-align: center;
+                    margin: 20px 0;
+                }
+                .welcome-icon {
+                    font-size: 48px;
+                    margin-bottom: 10px;
+                }
+                .credentials-box {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #764ba2;
+                }
+                .credential-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 12px 0;
+                    border-bottom: 1px solid #e0e0e0;
+                }
+                .credential-row:last-child {
+                    border-bottom: none;
+                }
+                .label {
+                    font-weight: bold;
+                    color: #555;
+                }
+                .value {
+                    color: #2c3e50;
+                    font-family: 'Courier New', monospace;
+                    background-color: #e8f4f8;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                }
+                .security-warning {
+                    background-color: #fff3cd;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border-left: 4px solid #ffc107;
+                    margin: 20px 0;
+                    font-size: 14px;
+                }
+                .admin-features {
+                    background-color: #e8f4f8;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #3498db;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e0e0e0;
+                    color: #7f8c8d;
+                    font-size: 12px;
+                }
+                .btn {
+                    display: inline-block;
+                    padding: 12px 30px;
+                    background-color: #764ba2;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    margin: 20px 0;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">Library Card Generator</div>
+                    <p style="color: #7f8c8d; margin: 5px 0 0 0;">Digital Library Services</p>
+                </div>
+                
+                <div class="welcome-badge">
+                    <div class="welcome-icon">👑</div>
+                    <h2 style="margin: 0 0 10px 0;">Welcome to the Admin Team!</h2>
+                    <p style="margin: 0; font-size: 16px;">You've been granted administrator access</p>
+                </div>
+                
+                <p>Dear ${userName},</p>
+                
+                <p>Congratulations! An administrator has created an admin account for you in the Library Card Generator system. You now have full administrative privileges to manage the platform.</p>
+                
+                <div class="credentials-box">
+                    <h3 style="margin-top: 0; color: #2c3e50;">Your Login Credentials</h3>
+                    <div class="credential-row">
+                        <span class="label">Email:</span>
+                        <span class="value">${userEmail}</span>
+                    </div>
+                    <div class="credential-row">
+                        <span class="label">Password:</span>
+                        <span class="value">${password}</span>
+                    </div>
+                    <div class="credential-row">
+                        <span class="label">Role:</span>
+                        <span class="value">Administrator</span>
+                    </div>
+                    <div class="credential-row">
+                        <span class="label">Status:</span>
+                        <span class="value" style="background-color: #d4edda; color: #155724;">✓ Verified</span>
+                    </div>
+                </div>
+                
+                <div class="security-warning">
+                    <strong>⚠️ Important Security Notice:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Please change your password immediately after your first login</li>
+                        <li>Keep your credentials secure and confidential</li>
+                        <li>Never share your admin password with anyone</li>
+                        <li>Use a strong, unique password for your account</li>
+                    </ul>
+                </div>
+                
+                <div class="admin-features">
+                    <h3 style="margin-top: 0; color: #2c3e50;">As an Administrator, you can:</h3>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>View and manage all registered users</li>
+                        <li>Review and approve library card applications</li>
+                        <li>Reject applications with detailed feedback</li>
+                        <li>Delete users and applications</li>
+                        <li>Create new administrator accounts</li>
+                        <li>Access comprehensive dashboard analytics</li>
+                        <li>Send automated email notifications</li>
+                        <li>Monitor system activities and statistics</li>
+                    </ul>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <p style="margin-bottom: 15px;">Ready to get started?</p>
+                    <p style="color: #7f8c8d; font-size: 14px;">Login at: <strong>${process.env.FRONTEND_URL || 'http://localhost:5173'}/login</strong></p>
+                </div>
+                
+                <p>If you have any questions about your admin privileges or need assistance, please contact the system administrator.</p>
+                
+                <div class="footer">
+                    <p><strong>Library Card Generator</strong><br>
+                    Digital Library Services<br>
+                    Email: ${process.env.EMAIL}</p>
+                    <p style="margin-top: 10px;">This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+      `,
+      text: `Dear ${userName},\n\nCongratulations! You've been granted administrator access to the Library Card Generator system.\n\nYour Login Credentials:\n- Email: ${userEmail}\n- Password: ${password}\n- Role: Administrator\n- Status: Verified\n\nIMPORTANT: Please change your password immediately after your first login.\n\nAs an administrator, you can:\n- View and manage all users\n- Review and approve library card applications\n- Delete users and applications\n- Create new administrator accounts\n- Access comprehensive dashboard analytics\n\nLogin at: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/login\n\nBest regards,\nLibrary Card Generator Team`,
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+        'X-Mailer': 'Library Card Generator System v1.0',
+        'Reply-To': process.env.EMAIL,
+      }
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('New admin email sent successfully:', result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending new admin email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendApplicationApprovedEmail,
-  sendApplicationRejectedEmail
+  sendApplicationRejectedEmail,
+  sendNewAdminEmail
 };

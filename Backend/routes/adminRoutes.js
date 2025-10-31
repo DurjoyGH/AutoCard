@@ -31,4 +31,7 @@ router.put("/applications/:applicationId/reject", adminController.rejectApplicat
 // Delete card application
 router.delete("/applications/:applicationId", adminController.deleteApplication);
 
+// Create new admin
+router.post("/create-admin", adminController.createAdmin);
+
 module.exports = router;

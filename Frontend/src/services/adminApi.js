@@ -192,3 +192,26 @@ export const deleteApplication = async (applicationId) => {
   }
 };
 
+// Create new admin user
+export const createAdmin = async (adminData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/create-admin`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(adminData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to create admin');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Create admin error:', error);
+    throw error;
+  }
+};
+
+
