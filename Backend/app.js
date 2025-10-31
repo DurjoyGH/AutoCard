@@ -7,6 +7,7 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const { swaggerConfig, swaggerUIOptions } = require('./configs/swagger');
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const applyRoutes = require("./routes/applyRoutes");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/apply", applyRoutes);
 
 app.get("/", (req, res) => {
     res.send("API is Running!")

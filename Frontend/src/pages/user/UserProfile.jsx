@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { showToast } from '../../components/Toast/CustomToast';
 import { useAuth } from '../../context/AuthContext';
 import { getUserProfile, updateUserProfile, deleteProfilePicture, deleteSignature } from '../../services/userApi';
+import { applyForCard, getApplicationStatus } from '../../services/applyApi';
 
 const UserProfile = () => {
   const { user, updateUser } = useAuth();
@@ -24,6 +25,8 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [applicationStatus, setApplicationStatus] = useState(null);
+  const [hasApplication, setHasApplication] = useState(false);
   
   const photoInputRef = useRef(null);
   const signatureInputRef = useRef(null);
@@ -57,6 +60,7 @@ const UserProfile = () => {
   // Load user profile on component mount
   useEffect(() => {
     loadUserProfile();
+    checkApplicationStatus();
   }, []);
 
   // Populate form with user data from context when available
@@ -116,6 +120,44 @@ const UserProfile = () => {
     } catch (error) {
       console.error('Error loading profile:', error);
       showToast('Failed to load profile data', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const checkApplicationStatus = async () => {
+    try {
+      const response = await getApplicationStatus();
+      if (response.hasApplication) {
+        setHasApplication(true);
+        setApplicationStatus(response.application);
+      } else {
+        setHasApplication(false);
+        setApplicationStatus(null);
+      }
+    } catch (error) {
+      console.error('Error checking application status:', error);
+      // User hasn't applied yet or error occurred
+      setHasApplication(false);
+      setApplicationStatus(null);
+    }
+  };
+
+  const handleApplyForCard = async () => {
+    if (profileCompletion !== 100) {
+      showToast.error('Please complete your profile before applying');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await applyForCard();
+      showToast.success('Application submitted successfully!');
+      setHasApplication(true);
+      setApplicationStatus(response.application);
+    } catch (error) {
+      console.error('Apply for card error:', error);
+      showToast.error(error.message || 'Failed to submit application. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -304,7 +346,33 @@ const UserProfile = () => {
     }
   };
 
-  const canApplyForCard = profileCompletion === 100;
+  const canApplyForCard = profileCompletion === 100 && !hasApplication;
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20';
+      case 'approved':
+        return 'text-green-400 bg-green-400/10 border-green-400/20';
+      case 'rejected':
+        return 'text-red-400 bg-red-400/10 border-red-400/20';
+      default:
+        return 'text-gray-400 bg-gray-400/10 border-gray-400/20';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'Pending Review';
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'Unknown';
+    }
+  };
 
   return (
     <div className="min-h-screen py-8">
@@ -346,6 +414,39 @@ const UserProfile = () => {
             </div>
           )}
         </div>
+
+        {/* Application Status */}
+        {hasApplication && applicationStatus && (
+          <div className={`backdrop-blur-xl border rounded-2xl p-6 mb-8 ${getStatusColor(applicationStatus.status)}`}>
+            <h3 className="font-semibold text-lg mb-2">Library Card Application Status</h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm opacity-80">
+                  Applied on: {new Date(applicationStatus.appliedAt).toLocaleDateString()}
+                </p>
+                <p className="mt-2">
+                  <span className="font-medium">Status: </span>
+                  <span className="font-bold">{getStatusText(applicationStatus.status)}</span>
+                </p>
+                {applicationStatus.status === 'rejected' && applicationStatus.rejectionReason && (
+                  <p className="mt-2 text-sm">
+                    <span className="font-medium">Reason: </span>
+                    {applicationStatus.rejectionReason}
+                  </p>
+                )}
+              </div>
+              {applicationStatus.status === 'pending' && (
+                <div className="flex items-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-sm">Under Review</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Photo Upload Section */}
@@ -654,9 +755,21 @@ const UserProfile = () => {
                 </p>
                 <button
                   type="button"
-                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-green-500/25 transform hover:scale-105"
+                  onClick={handleApplyForCard}
+                  disabled={isLoading}
+                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-green-500/25 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center mx-auto"
                 >
-                  Apply for Library Card
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Submitting Application...
+                    </>
+                  ) : (
+                    'Apply for Library Card'
+                  )}
                 </button>
               </div>
             </div>
