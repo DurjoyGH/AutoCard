@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import UserDashboard from './pages/user/UserDashboard';
 import UserProfile from './pages/user/UserProfile';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import UserList from './pages/admin/UserList';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
@@ -41,7 +42,7 @@ function App() {
         }>
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<div className="text-white">User List - Coming Soon</div>} />
+          <Route path="users" element={<UserList />} />
           <Route path="applications" element={<div className="text-white">Review Applications - Coming Soon</div>} />
           <Route path="add-admin" element={<div className="text-white">Add Admin - Coming Soon</div>} />
         </Route>

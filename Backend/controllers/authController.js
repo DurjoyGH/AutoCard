@@ -36,6 +36,7 @@ exports.register = async (req, res) => {
       verification: {
         token: verificationToken,
         createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 300000), // Expires in 5 minutes
       },
     });
 
@@ -208,6 +209,7 @@ exports.resendVerificationToken = async (req, res) => {
     user.verification = {
       token: verificationToken,
       createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 300000), // Expires in 5 minutes
     };
 
     await user.save();

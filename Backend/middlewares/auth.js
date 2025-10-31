@@ -76,6 +76,7 @@ const requireOwnershipOrAdmin = (userIdField = 'userId') => {
 module.exports = {
   authenticateToken,
   requireAdmin,
+  isAdmin: requireAdmin, // Alias for consistency
   requireVerified,
   requireRole,
   requireOwnershipOrAdmin

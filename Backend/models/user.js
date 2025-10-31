@@ -21,10 +21,10 @@ const userSchema = new mongoose.Schema(
 
     verification: {
       token: { type: String },
-      createdAt: {
+      createdAt: { type: Date },
+      expiresAt: {
         type: Date,
-        default: Date.now,
-        expires: 300,
+        expires: 300, // TTL index - documents will be deleted 300 seconds after expiresAt
       },
     },
   },
