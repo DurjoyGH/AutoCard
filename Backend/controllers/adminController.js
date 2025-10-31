@@ -1,5 +1,9 @@
 const User = require("../models/user");
 const CardApplication = require("../models/cardApplication");
+const {
+  sendApplicationApprovedEmail,
+  sendApplicationRejectedEmail,
+} = require("../services/email");
 
 // Get all users (admin only)
 exports.getAllUsers = async (req, res) => {
@@ -147,3 +151,180 @@ exports.updateUserRole = async (req, res) => {
     });
   }
 };
+
+// Get all card applications (admin only)
+exports.getAllApplications = async (req, res) => {
+  try {
+    const { status } = req.query; // Filter by status if provided
+
+    const query = status && status !== "all" ? { status } : {};
+
+    const applications = await CardApplication.find(query)
+      .populate("userId", "name email studentID phoneNumber")
+      .populate("reviewedBy", "name email")
+      .sort({ appliedAt: -1 });
+
+    const stats = {
+      total: applications.length,
+      pending: applications.filter((app) => app.status === "pending").length,
+      approved: applications.filter((app) => app.status === "approved").length,
+      rejected: applications.filter((app) => app.status === "rejected").length,
+    };
+
+    res.status(200).json({
+      message: "Applications retrieved successfully",
+      applications,
+      stats,
+    });
+  } catch (error) {
+    console.error("Get all applications error:", error);
+    res.status(500).json({
+      message: "Failed to retrieve applications",
+      error: error.message,
+    });
+  }
+};
+
+// Approve card application (admin only)
+exports.approveApplication = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    const application = await CardApplication.findById(applicationId).populate(
+      "userId",
+      "name email"
+    );
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (application.status === "approved") {
+      return res.status(400).json({
+        message: "Application is already approved",
+      });
+    }
+
+    application.status = "approved";
+    application.reviewedAt = new Date();
+    application.reviewedBy = req.user.id;
+    application.rejectionReason = undefined; // Clear rejection reason if any
+
+    await application.save();
+
+    // Send approval email to user
+    const emailResult = await sendApplicationApprovedEmail(
+      application.userId.email,
+      application.userId.name,
+      application
+    );
+
+    if (!emailResult.success) {
+      console.error("Failed to send approval email:", emailResult.error);
+    }
+
+    res.status(200).json({
+      message: "Application approved successfully",
+      application,
+      emailSent: emailResult.success,
+    });
+  } catch (error) {
+    console.error("Approve application error:", error);
+    res.status(500).json({
+      message: "Failed to approve application",
+      error: error.message,
+    });
+  }
+};
+
+// Reject card application (admin only)
+exports.rejectApplication = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { rejectionReason } = req.body;
+
+    if (!rejectionReason || rejectionReason.trim() === "") {
+      return res.status(400).json({
+        message: "Rejection reason is required",
+      });
+    }
+
+    const application = await CardApplication.findById(applicationId).populate(
+      "userId",
+      "name email"
+    );
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (application.status === "rejected") {
+      return res.status(400).json({
+        message: "Application is already rejected",
+      });
+    }
+
+    application.status = "rejected";
+    application.reviewedAt = new Date();
+    application.reviewedBy = req.user.id;
+    application.rejectionReason = rejectionReason;
+
+    await application.save();
+
+    // Send rejection email to user
+    const emailResult = await sendApplicationRejectedEmail(
+      application.userId.email,
+      application.userId.name,
+      application,
+      rejectionReason
+    );
+
+    if (!emailResult.success) {
+      console.error("Failed to send rejection email:", emailResult.error);
+    }
+
+    res.status(200).json({
+      message: "Application rejected successfully",
+      application,
+      emailSent: emailResult.success,
+    });
+  } catch (error) {
+    console.error("Reject application error:", error);
+    res.status(500).json({
+      message: "Failed to reject application",
+      error: error.message,
+    });
+  }
+};
+
+// Delete card application (admin only)
+exports.deleteApplication = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    const application = await CardApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    await CardApplication.findByIdAndDelete(applicationId);
+
+    res.status(200).json({
+      message: "Application deleted successfully",
+      deletedApplication: {
+        id: application._id,
+        name: application.name,
+        email: application.email,
+        status: application.status,
+      },
+    });
+  } catch (error) {
+    console.error("Delete application error:", error);
+    res.status(500).json({
+      message: "Failed to delete application",
+      error: error.message,
+    });
+  }
+};
+

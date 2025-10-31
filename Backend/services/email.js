@@ -345,8 +345,375 @@ const sendPasswordResetEmail = async (userEmail, userName, resetToken) => {
   }
 };
 
+const sendApplicationApprovedEmail = async (userEmail, userName, application) => {
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: {
+        name: 'Library Card Generator',
+        address: process.env.EMAIL
+      },
+      to: userEmail,
+      subject: '🎉 Library Card Application Approved!',
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Application Approved</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                }
+                .container {
+                    background-color: #ffffff;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                    text-align: center;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #e0e0e0;
+                }
+                .success-badge {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-align: center;
+                    margin: 20px 0;
+                }
+                .success-icon {
+                    font-size: 48px;
+                    margin-bottom: 10px;
+                }
+                .card-info {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #28a745;
+                }
+                .info-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                    border-bottom: 1px solid #e0e0e0;
+                }
+                .info-row:last-child {
+                    border-bottom: none;
+                }
+                .label {
+                    font-weight: bold;
+                    color: #555;
+                }
+                .value {
+                    color: #2c3e50;
+                }
+                .next-steps {
+                    background-color: #e8f4f8;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #3498db;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e0e0e0;
+                    color: #7f8c8d;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="color: #2c3e50; margin: 0;">Library Card Generator</h1>
+                    <p style="color: #7f8c8d; margin: 5px 0 0 0;">Digital Library Services</p>
+                </div>
+                
+                <div class="success-badge">
+                    <div class="success-icon">✅</div>
+                    <h2 style="margin: 0 0 10px 0;">Congratulations!</h2>
+                    <p style="margin: 0; font-size: 16px;">Your Library Card Application Has Been Approved</p>
+                </div>
+                
+                <p>Dear ${userName},</p>
+                
+                <p>We are pleased to inform you that your library card application has been <strong>approved</strong>! Your digital library card is now active and ready to use.</p>
+                
+                <div class="card-info">
+                    <h3 style="margin-top: 0; color: #2c3e50;">Application Details</h3>
+                    <div class="info-row">
+                        <span class="label">Application ID:</span>
+                        <span class="value">${application._id}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Student ID:</span>
+                        <span class="value">${application.studentID}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Hall Name:</span>
+                        <span class="value">${application.hallName}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Status:</span>
+                        <span class="value" style="color: #28a745; font-weight: bold;">APPROVED</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Reviewed On:</span>
+                        <span class="value">${new Date(application.reviewedAt).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                
+                <div class="next-steps">
+                    <h3 style="margin-top: 0; color: #2c3e50;">What's Next?</h3>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Your digital library card is now active</li>
+                        <li>You can access all library resources and services</li>
+                        <li>Download your library card from your profile</li>
+                        <li>Present your card when borrowing books</li>
+                        <li>Keep your profile information up to date</li>
+                    </ul>
+                </div>
+                
+                <p>Thank you for choosing our library services. We look forward to serving you!</p>
+                
+                <p style="margin-top: 30px;">If you have any questions, please don't hesitate to contact us.</p>
+                
+                <div class="footer">
+                    <p><strong>Library Card Generator</strong><br>
+                    Digital Library Services<br>
+                    Email: ${process.env.EMAIL}</p>
+                    <p style="margin-top: 10px;">This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+      `,
+      text: `Dear ${userName},\n\nCongratulations! Your library card application has been APPROVED.\n\nApplication Details:\n- Application ID: ${application._id}\n- Student ID: ${application.studentID}\n- Hall Name: ${application.hallName}\n- Status: APPROVED\n- Reviewed On: ${new Date(application.reviewedAt).toLocaleDateString()}\n\nYour digital library card is now active and ready to use.\n\nBest regards,\nLibrary Card Generator Team`,
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+        'X-Mailer': 'Library Card Generator System v1.0',
+        'Reply-To': process.env.EMAIL,
+      }
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Application approval email sent successfully:', result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending application approval email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+const sendApplicationRejectedEmail = async (userEmail, userName, application, rejectionReason) => {
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: {
+        name: 'Library Card Generator',
+        address: process.env.EMAIL
+      },
+      to: userEmail,
+      subject: 'Library Card Application Update - Action Required',
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Application Update</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                }
+                .container {
+                    background-color: #ffffff;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                    text-align: center;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #e0e0e0;
+                }
+                .warning-badge {
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-align: center;
+                    margin: 20px 0;
+                }
+                .warning-icon {
+                    font-size: 48px;
+                    margin-bottom: 10px;
+                }
+                .reason-box {
+                    background-color: #fff3cd;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #ffc107;
+                }
+                .card-info {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                }
+                .info-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                    border-bottom: 1px solid #e0e0e0;
+                }
+                .info-row:last-child {
+                    border-bottom: none;
+                }
+                .label {
+                    font-weight: bold;
+                    color: #555;
+                }
+                .value {
+                    color: #2c3e50;
+                }
+                .next-steps {
+                    background-color: #e8f4f8;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border-left: 4px solid #3498db;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e0e0e0;
+                    color: #7f8c8d;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="color: #2c3e50; margin: 0;">Library Card Generator</h1>
+                    <p style="color: #7f8c8d; margin: 5px 0 0 0;">Digital Library Services</p>
+                </div>
+                
+                <div class="warning-badge">
+                    <div class="warning-icon">📋</div>
+                    <h2 style="margin: 0 0 10px 0;">Application Update Required</h2>
+                    <p style="margin: 0; font-size: 16px;">Your Library Card Application Needs Attention</p>
+                </div>
+                
+                <p>Dear ${userName},</p>
+                
+                <p>Thank you for submitting your library card application. After careful review, we regret to inform you that your application could not be approved at this time.</p>
+                
+                <div class="reason-box">
+                    <h3 style="margin-top: 0; color: #856404;">Reason for Rejection</h3>
+                    <p style="margin: 10px 0; color: #856404; font-size: 15px;"><strong>${rejectionReason}</strong></p>
+                </div>
+                
+                <div class="card-info">
+                    <h3 style="margin-top: 0; color: #2c3e50;">Application Details</h3>
+                    <div class="info-row">
+                        <span class="label">Application ID:</span>
+                        <span class="value">${application._id}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Student ID:</span>
+                        <span class="value">${application.studentID}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Hall Name:</span>
+                        <span class="value">${application.hallName}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Status:</span>
+                        <span class="value" style="color: #dc3545; font-weight: bold;">REJECTED</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Reviewed On:</span>
+                        <span class="value">${new Date(application.reviewedAt).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                
+                <div class="next-steps">
+                    <h3 style="margin-top: 0; color: #2c3e50;">What You Can Do Next</h3>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Review the rejection reason carefully</li>
+                        <li>Correct the mentioned issues in your application</li>
+                        <li>Ensure all required documents are clear and valid</li>
+                        <li>Submit a new application with the corrections</li>
+                        <li>Contact support if you need assistance</li>
+                    </ul>
+                </div>
+                
+                <p>We encourage you to address the concerns mentioned above and resubmit your application. Our team is here to help you through the process.</p>
+                
+                <p style="margin-top: 30px;">If you have any questions or need clarification, please feel free to contact us.</p>
+                
+                <div class="footer">
+                    <p><strong>Library Card Generator</strong><br>
+                    Digital Library Services<br>
+                    Email: ${process.env.EMAIL}</p>
+                    <p style="margin-top: 10px;">This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+      `,
+      text: `Dear ${userName},\n\nYour library card application has been reviewed and could not be approved at this time.\n\nReason for Rejection:\n${rejectionReason}\n\nApplication Details:\n- Application ID: ${application._id}\n- Student ID: ${application.studentID}\n- Hall Name: ${application.hallName}\n- Status: REJECTED\n- Reviewed On: ${new Date(application.reviewedAt).toLocaleDateString()}\n\nPlease address the concerns mentioned and submit a new application.\n\nBest regards,\nLibrary Card Generator Team`,
+      headers: {
+        'X-Priority': '2',
+        'X-MSMail-Priority': 'Normal',
+        'Importance': 'normal',
+        'X-Mailer': 'Library Card Generator System v1.0',
+        'Reply-To': process.env.EMAIL,
+      }
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Application rejection email sent successfully:', result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending application rejection email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendWelcomeEmail,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendApplicationApprovedEmail,
+  sendApplicationRejectedEmail
 };

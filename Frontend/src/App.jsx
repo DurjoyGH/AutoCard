@@ -7,6 +7,7 @@ import UserDashboard from './pages/user/UserDashboard';
 import UserProfile from './pages/user/UserProfile';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserList from './pages/admin/UserList';
+import ReviewCardApplication from './pages/admin/ReviewCardApplication';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
@@ -43,7 +44,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UserList />} />
-          <Route path="applications" element={<div className="text-white">Review Applications - Coming Soon</div>} />
+          <Route path="applications" element={<ReviewCardApplication />} />
           <Route path="add-admin" element={<div className="text-white">Add Admin - Coming Soon</div>} />
         </Route>
         

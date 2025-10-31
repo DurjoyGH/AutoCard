@@ -19,4 +19,16 @@ router.delete("/users/:userId", adminController.deleteUser);
 // Update user role
 router.put("/users/:userId/role", adminController.updateUserRole);
 
+// Get all card applications
+router.get("/applications", adminController.getAllApplications);
+
+// Approve card application
+router.put("/applications/:applicationId/approve", adminController.approveApplication);
+
+// Reject card application
+router.put("/applications/:applicationId/reject", adminController.rejectApplication);
+
+// Delete card application
+router.delete("/applications/:applicationId", adminController.deleteApplication);
+
 module.exports = router;
