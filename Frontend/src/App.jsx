@@ -7,6 +7,7 @@ import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 import UserDashboard from './pages/user/UserDashboard';
 import UserProfile from './pages/user/UserProfile';
 import Contact from './pages/user/Contact';
+import About from './pages/user/About';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserList from './pages/admin/UserList';
 import ReviewCardApplication from './pages/admin/ReviewCardApplication';
@@ -28,6 +29,7 @@ function App() {
         {/* Public Routes - Home page and contact accessible to everyone */}
         <Route path="/" element={<UserLayout />}>
           <Route index element={<UserDashboard />} />
+          <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
         </Route>
         
