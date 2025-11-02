@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FileText,
   CheckCircle,
@@ -18,6 +18,7 @@ import {
   X,
   GraduationCap,
   CreditCard,
+  Download,
 } from 'lucide-react';
 import {
   getAllApplications,
@@ -28,6 +29,8 @@ import {
 import { showToast } from '../../components/Toast/CustomToast';
 import LCFront from './LC-Front';
 import LCBack from './LC-Back';
+import domtoimage from 'dom-to-image-more';
+import { jsPDF } from 'jspdf';
 
 const ReviewCardApplication = () => {
   const [applications, setApplications] = useState([]);
@@ -45,6 +48,7 @@ const ReviewCardApplication = () => {
   const [viewModal, setViewModal] = useState({ isOpen: false, application: null });
   const [cardPreviewModal, setCardPreviewModal] = useState({ isOpen: false, application: null });
   const [showCardBack, setShowCardBack] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [approveModal, setApproveModal] = useState({
     isOpen: false,
     application: null,
@@ -61,6 +65,10 @@ const ReviewCardApplication = () => {
     application: null,
     isDeleting: false,
   });
+
+  // Refs for capturing card elements
+  const cardFrontRef = useRef(null);
+  const cardBackRef = useRef(null);
 
   useEffect(() => {
     fetchApplications();
@@ -226,6 +234,145 @@ const ReviewCardApplication = () => {
   const closeCardPreviewModal = () => {
     setCardPreviewModal({ isOpen: false, application: null });
     setShowCardBack(false);
+  };
+
+  const downloadCardAsPDF = async () => {
+    if (!cardFrontRef.current || !cardBackRef.current || !cardPreviewModal.application) {
+      showToast.error('Card elements not found');
+      return;
+    }
+
+    setIsDownloading(true);
+    
+    try {
+      // Get the actual card elements
+      const frontCardElement = cardFrontRef.current.querySelector('.bg-white.rounded-2xl');
+      const backCardElement = cardBackRef.current.querySelector('.bg-white.rounded-2xl');
+
+      if (!frontCardElement || !backCardElement) {
+        showToast.error('Card elements not found');
+        setIsDownloading(false);
+        return;
+      }
+
+      // Clone elements and remove borders
+      const frontClone = frontCardElement.cloneNode(true);
+      const backClone = backCardElement.cloneNode(true);
+
+      // Remove shadows, borders, rounded corners, and aspect ratio to show full content
+      frontClone.style.boxShadow = 'none';
+      frontClone.style.borderRadius = '0';
+      frontClone.style.aspectRatio = 'unset'; // Remove aspect ratio constraint
+      frontClone.style.height = 'auto'; // Let content determine height
+      frontClone.style.minHeight = '0';
+      frontClone.style.overflow = 'visible'; // Show all content
+      
+      backClone.style.boxShadow = 'none';
+      backClone.style.borderRadius = '0';
+      backClone.style.aspectRatio = 'unset'; // Remove aspect ratio constraint
+      backClone.style.height = 'auto'; // Let content determine height
+      backClone.style.minHeight = '0';
+      backClone.style.overflow = 'visible'; // Show all content
+
+      // Remove all borders from child elements in clones
+      const removeElementBorders = (element) => {
+        element.querySelectorAll('*').forEach(el => {
+          el.style.border = 'none';
+          el.style.boxShadow = 'none';
+        });
+        // Also remove borders from photo frames
+        element.querySelectorAll('.border-2, .border').forEach(el => {
+          el.style.border = 'none';
+        });
+      };
+
+      removeElementBorders(frontClone);
+      removeElementBorders(backClone);
+
+      // Temporarily add clones to DOM off-screen for rendering
+      frontClone.style.position = 'absolute';
+      frontClone.style.left = '-9999px';
+      frontClone.style.top = '-9999px';
+      
+      backClone.style.position = 'absolute';
+      backClone.style.left = '-9999px';
+      backClone.style.top = '-9999px';
+
+      document.body.appendChild(frontClone);
+      document.body.appendChild(backClone);
+
+      // Wait for rendering
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Get initial dimensions
+      const initialFrontWidth = frontClone.offsetWidth;
+      const initialBackWidth = backClone.offsetWidth;
+      
+      // Set both cards to the same width (the larger one) to avoid scaling issues
+      const targetWidth = Math.max(initialFrontWidth, initialBackWidth);
+      frontClone.style.width = `${targetWidth}px`;
+      backClone.style.width = `${targetWidth}px`;
+
+      // Wait a bit for the width change to take effect
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Get actual dimensions after adjustment
+      const frontWidth = frontClone.offsetWidth;
+      const frontHeight = frontClone.offsetHeight;
+      const backWidth = backClone.offsetWidth;
+      const backHeight = backClone.offsetHeight;
+
+      const scale = 4;
+
+      // Capture clones with simple options
+      const frontImageData = await domtoimage.toPng(frontClone, {
+        quality: 1,
+        bgcolor: '#ffffff',
+        width: frontWidth,
+        height: frontHeight,
+      });
+
+      const backImageData = await domtoimage.toPng(backClone, {
+        quality: 1,
+        bgcolor: '#ffffff',
+        width: backWidth,
+        height: backHeight,
+      });
+
+      // Remove clones from DOM
+      document.body.removeChild(frontClone);
+      document.body.removeChild(backClone);
+
+      // Use SAME dimensions for both pages - use maximum width and height
+      const pdfWidth = Math.max(frontWidth, backWidth);
+      const pdfHeight = Math.max(frontHeight, backHeight);
+
+      // Create PDF with same size for both pages
+      const pdf = new jsPDF({
+        orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [pdfWidth, pdfHeight],
+        compress: true,
+      });
+
+      // Add front image - fill the entire page by scaling up if needed
+      pdf.addImage(frontImageData, 'PNG', 0, 0, pdfWidth, pdfHeight, '', 'FAST');
+      
+      // Add back page - same exact dimensions
+      pdf.addPage([pdfWidth, pdfHeight], pdfWidth > pdfHeight ? 'landscape' : 'portrait');
+      pdf.addImage(backImageData, 'PNG', 0, 0, pdfWidth, pdfHeight, '', 'FAST');
+
+      // Download
+      const fileName = `LibraryCard_${cardPreviewModal.application.name.replace(/\s+/g, '_')}_${cardPreviewModal.application.studentID}.pdf`;
+      pdf.save(fileName);
+      
+      showToast.success('Library card downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showToast.error('Failed to download card. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -745,8 +892,8 @@ const ReviewCardApplication = () => {
               Library Card Preview - {showCardBack ? 'Back' : 'Front'}
             </h3>
 
-            {/* Toggle Button */}
-            <div className="flex justify-center mb-6">
+            {/* Action Buttons */}
+            <div className="flex justify-center gap-3 mb-6">
               <button
                 onClick={() => setShowCardBack(!showCardBack)}
                 className="px-6 py-2 bg-[#598392]/20 hover:bg-[#598392]/30 text-[#598392] rounded-lg transition-all duration-200 border border-[#598392]/20 font-medium flex items-center gap-2"
@@ -754,14 +901,50 @@ const ReviewCardApplication = () => {
                 <CreditCard className="w-4 h-4" />
                 {showCardBack ? 'Show Front' : 'Show Back'}
               </button>
+
+              <button
+                onClick={downloadCardAsPDF}
+                disabled={isDownloading}
+                className="px-6 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-all duration-200 border border-green-500/20 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDownloading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-green-400"></div>
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Download PDF
+                  </>
+                )}
+              </button>
             </div>
 
-            {/* Library Card */}
+            {/* Library Card - Visible */}
             <div className="flex justify-center">
               {showCardBack ? (
-                <LCBack applicationData={cardPreviewModal.application} />
+                <div ref={cardBackRef}>
+                  <LCBack applicationData={cardPreviewModal.application} />
+                </div>
               ) : (
-                <LCFront applicationData={cardPreviewModal.application} />
+                <div ref={cardFrontRef}>
+                  <LCFront applicationData={cardPreviewModal.application} />
+                </div>
+              )}
+            </div>
+
+            {/* Hidden Cards for PDF Generation */}
+            <div className="absolute -left-[9999px] -top-[9999px]">
+              {!showCardBack && (
+                <div ref={cardBackRef}>
+                  <LCBack applicationData={cardPreviewModal.application} />
+                </div>
+              )}
+              {showCardBack && (
+                <div ref={cardFrontRef}>
+                  <LCFront applicationData={cardPreviewModal.application} />
+                </div>
               )}
             </div>
           </div>
