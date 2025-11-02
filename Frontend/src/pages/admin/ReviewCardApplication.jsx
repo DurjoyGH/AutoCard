@@ -27,6 +27,7 @@ import {
 } from '../../services/adminApi';
 import { showToast } from '../../components/Toast/CustomToast';
 import LCFront from './LC-Front';
+import LCBack from './LC-Back';
 
 const ReviewCardApplication = () => {
   const [applications, setApplications] = useState([]);
@@ -43,6 +44,7 @@ const ReviewCardApplication = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [viewModal, setViewModal] = useState({ isOpen: false, application: null });
   const [cardPreviewModal, setCardPreviewModal] = useState({ isOpen: false, application: null });
+  const [showCardBack, setShowCardBack] = useState(false);
   const [approveModal, setApproveModal] = useState({
     isOpen: false,
     application: null,
@@ -218,10 +220,12 @@ const ReviewCardApplication = () => {
 
   const openCardPreviewModal = (application) => {
     setCardPreviewModal({ isOpen: true, application });
+    setShowCardBack(false);
   };
 
   const closeCardPreviewModal = () => {
     setCardPreviewModal({ isOpen: false, application: null });
+    setShowCardBack(false);
   };
 
   const getStatusBadge = (status) => {
@@ -737,13 +741,28 @@ const ReviewCardApplication = () => {
             </button>
 
             {/* Title */}
-            <h3 className="text-2xl font-bold text-white text-center mb-6">Library Card Preview</h3>
+            <h3 className="text-2xl font-bold text-white text-center mb-4">
+              Library Card Preview - {showCardBack ? 'Back' : 'Front'}
+            </h3>
+
+            {/* Toggle Button */}
+            <div className="flex justify-center mb-6">
+              <button
+                onClick={() => setShowCardBack(!showCardBack)}
+                className="px-6 py-2 bg-[#598392]/20 hover:bg-[#598392]/30 text-[#598392] rounded-lg transition-all duration-200 border border-[#598392]/20 font-medium flex items-center gap-2"
+              >
+                <CreditCard className="w-4 h-4" />
+                {showCardBack ? 'Show Front' : 'Show Back'}
+              </button>
+            </div>
 
             {/* Library Card */}
             <div className="flex justify-center">
-              <LCFront 
-                applicationData={cardPreviewModal.application}
-              />
+              {showCardBack ? (
+                <LCBack applicationData={cardPreviewModal.application} />
+              ) : (
+                <LCFront applicationData={cardPreviewModal.application} />
+              )}
             </div>
           </div>
         </div>
