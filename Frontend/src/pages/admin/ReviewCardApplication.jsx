@@ -17,6 +17,7 @@ import {
   IdCard,
   X,
   GraduationCap,
+  CreditCard,
 } from 'lucide-react';
 import {
   getAllApplications,
@@ -25,6 +26,7 @@ import {
   deleteApplication,
 } from '../../services/adminApi';
 import { showToast } from '../../components/Toast/CustomToast';
+import LCFront from './LC-Front';
 
 const ReviewCardApplication = () => {
   const [applications, setApplications] = useState([]);
@@ -40,6 +42,7 @@ const ReviewCardApplication = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [viewModal, setViewModal] = useState({ isOpen: false, application: null });
+  const [cardPreviewModal, setCardPreviewModal] = useState({ isOpen: false, application: null });
   const [approveModal, setApproveModal] = useState({
     isOpen: false,
     application: null,
@@ -211,6 +214,14 @@ const ReviewCardApplication = () => {
 
   const closeViewModal = () => {
     setViewModal({ isOpen: false, application: null });
+  };
+
+  const openCardPreviewModal = (application) => {
+    setCardPreviewModal({ isOpen: true, application });
+  };
+
+  const closeCardPreviewModal = () => {
+    setCardPreviewModal({ isOpen: false, application: null });
   };
 
   const getStatusBadge = (status) => {
@@ -417,7 +428,14 @@ const ReviewCardApplication = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-2 flex-wrap">
+                    <button
+                      onClick={() => openCardPreviewModal(application)}
+                      className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all duration-200 flex items-center border border-blue-500/20"
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Preview Card
+                    </button>
                     {application.status === 'pending' && (
                       <>
                         <button
@@ -701,6 +719,31 @@ const ReviewCardApplication = () => {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Card Preview Modal */}
+      {cardPreviewModal.isOpen && cardPreviewModal.application && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="relative bg-[#01161e] border border-[#598392]/20 rounded-2xl max-w-xl w-full p-6 shadow-2xl my-8">
+            {/* Close Button */}
+            <button
+              onClick={closeCardPreviewModal}
+              className="absolute top-4 right-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-full p-2 transition-all duration-200 border border-red-500/20 z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Title */}
+            <h3 className="text-2xl font-bold text-white text-center mb-6">Library Card Preview</h3>
+
+            {/* Library Card */}
+            <div className="flex justify-center">
+              <LCFront 
+                applicationData={cardPreviewModal.application}
+              />
             </div>
           </div>
         </div>
