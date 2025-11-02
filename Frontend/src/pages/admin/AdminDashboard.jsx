@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   FileText, 
@@ -7,8 +8,12 @@ import {
   XCircle,
   TrendingUp
 } from 'lucide-react';
+import { getAllUsers, getAllApplications } from '../../services/adminApi';
+import { showToast } from '../../components/Toast/CustomToast';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalApplications: 0,
@@ -17,22 +22,91 @@ const AdminDashboard = () => {
     rejectedApplications: 0
   });
 
+  const [recentActivities, setRecentActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Fetch actual stats from API
-    // For now, showing placeholder data
-    setTimeout(() => {
-      setStats({
-        totalUsers: 150,
-        totalApplications: 45,
-        pendingApplications: 12,
-        approvedApplications: 28,
-        rejectedApplications: 5
-      });
-      setIsLoading(false);
-    }, 500);
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+
+      // Fetch users and applications data
+      const [usersData, applicationsData] = await Promise.all([
+        getAllUsers(),
+        getAllApplications()
+      ]);
+
+      // Calculate stats from real data
+      const totalUsers = usersData.users?.length || 0;
+      const applications = applicationsData.applications || [];
+      const totalApplications = applications.length;
+      const pendingApplications = applications.filter(app => app.status === 'pending').length;
+      const approvedApplications = applications.filter(app => app.status === 'approved').length;
+      const rejectedApplications = applications.filter(app => app.status === 'rejected').length;
+
+      setStats({
+        totalUsers,
+        totalApplications,
+        pendingApplications,
+        approvedApplications,
+        rejectedApplications
+      });
+
+      // Get recent activities (last 5 applications)
+      const sortedApplications = applications
+        .sort((a, b) => new Date(b.appliedAt || b.createdAt) - new Date(a.appliedAt || a.createdAt))
+        .slice(0, 5);
+      
+      setRecentActivities(sortedApplications);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      showToast.error(error.message || 'Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const activityDate = new Date(date);
+    const diffInMs = now - activityDate;
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    return activityDate.toLocaleDateString();
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircle className="w-5 h-5 text-green-400" />;
+      case 'rejected':
+        return <XCircle className="w-5 h-5 text-red-400" />;
+      case 'pending':
+      default:
+        return <Clock className="w-5 h-5 text-yellow-400" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'approved':
+        return 'from-green-500 to-green-600';
+      case 'rejected':
+        return 'from-red-500 to-red-600';
+      case 'pending':
+      default:
+        return 'from-yellow-500 to-yellow-600';
+    }
+  };
 
   const statCards = [
     {
@@ -154,19 +228,28 @@ const AdminDashboard = () => {
         <div className="bg-[#01161e]/50 backdrop-blur-xl border border-[#598392]/20 rounded-2xl p-6">
           <h3 className="text-white font-semibold text-lg mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <button className="w-full flex items-center justify-between px-4 py-3 bg-[#598392]/10 hover:bg-[#598392]/20 border border-[#598392]/20 rounded-xl transition-all duration-200 text-left">
-              <span className="text-white font-medium">Review Pending Applications</span>
+            <button 
+              onClick={() => navigate('/admin/applications')}
+              className="w-full flex items-center justify-between px-4 py-3 bg-[#598392]/10 hover:bg-[#598392]/20 border border-[#598392]/20 rounded-xl transition-all duration-200 text-left group"
+            >
+              <span className="text-white font-medium group-hover:text-[#598392] transition-colors">Review Pending Applications</span>
               <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-bold">
                 {stats.pendingApplications}
               </span>
             </button>
-            <button className="w-full flex items-center justify-between px-4 py-3 bg-[#598392]/10 hover:bg-[#598392]/20 border border-[#598392]/20 rounded-xl transition-all duration-200 text-left">
-              <span className="text-white font-medium">View All Users</span>
+            <button 
+              onClick={() => navigate('/admin/users')}
+              className="w-full flex items-center justify-between px-4 py-3 bg-[#598392]/10 hover:bg-[#598392]/20 border border-[#598392]/20 rounded-xl transition-all duration-200 text-left group"
+            >
+              <span className="text-white font-medium group-hover:text-[#598392] transition-colors">View All Users</span>
               <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold">
                 {stats.totalUsers}
               </span>
             </button>
-            <button className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#598392] to-[#124559] hover:from-[#124559] hover:to-[#598392] rounded-xl transition-all duration-200 text-left">
+            <button 
+              onClick={() => navigate('/admin/add-admin')}
+              className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#598392] to-[#124559] hover:from-[#124559] hover:to-[#598392] rounded-xl transition-all duration-200 text-left"
+            >
               <span className="text-white font-medium">Add New Admin</span>
               <TrendingUp className="w-5 h-5 text-white" />
             </button>
@@ -174,27 +257,62 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity Placeholder */}
+      {/* Recent Activity */}
       <div className="bg-[#01161e]/50 backdrop-blur-xl border border-[#598392]/20 rounded-2xl p-6">
         <h3 className="text-white font-semibold text-lg mb-4">Recent Activity</h3>
         <div className="space-y-3">
-          {[1, 2, 3].map((item) => (
-            <div 
-              key={item}
-              className="flex items-center justify-between p-4 bg-[#598392]/5 hover:bg-[#598392]/10 border border-[#598392]/10 rounded-xl transition-all duration-200"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#598392] to-[#124559] rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-white" />
+          {isLoading ? (
+            // Loading skeleton
+            [1, 2, 3].map((item) => (
+              <div 
+                key={item}
+                className="flex items-center justify-between p-4 bg-[#598392]/5 border border-[#598392]/10 rounded-xl animate-pulse"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-[#598392]/20 rounded-lg"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-40 bg-[#598392]/20 rounded"></div>
+                    <div className="h-3 w-24 bg-[#598392]/20 rounded"></div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white font-medium">New application submitted</p>
-                  <p className="text-[#598392]/70 text-sm">Student ID: 2021-XXXX</p>
-                </div>
+                <div className="h-3 w-16 bg-[#598392]/20 rounded"></div>
               </div>
-              <span className="text-[#598392]/70 text-sm">2 hours ago</span>
+            ))
+          ) : recentActivities.length === 0 ? (
+            // No activities
+            <div className="text-center py-8">
+              <FileText className="w-12 h-12 text-[#598392]/40 mx-auto mb-3" />
+              <p className="text-[#598392]/70">No recent activities</p>
             </div>
-          ))}
+          ) : (
+            // Real activities
+            recentActivities.map((activity) => (
+              <div 
+                key={activity._id}
+                onClick={() => navigate('/admin/applications')}
+                className="flex items-center justify-between p-4 bg-[#598392]/5 hover:bg-[#598392]/10 border border-[#598392]/10 rounded-xl transition-all duration-200 cursor-pointer group"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className={`w-10 h-10 bg-gradient-to-br ${getStatusColor(activity.status)} rounded-lg flex items-center justify-center`}>
+                    {getStatusIcon(activity.status)}
+                  </div>
+                  <div>
+                    <p className="text-white font-medium group-hover:text-[#598392] transition-colors">
+                      {activity.status === 'approved' ? 'Application approved' : 
+                       activity.status === 'rejected' ? 'Application rejected' : 
+                       'New application submitted'}
+                    </p>
+                    <p className="text-[#598392]/70 text-sm">
+                      {activity.name} • {activity.studentID}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[#598392]/70 text-sm">
+                  {getTimeAgo(activity.appliedAt || activity.createdAt)}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
