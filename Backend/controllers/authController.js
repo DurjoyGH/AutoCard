@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const {
   generateToken,
@@ -20,7 +20,7 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
       return res.status(400).json({ message: "User already exists!" });
@@ -29,18 +29,14 @@ exports.register = async (req, res) => {
     const newPassword = await hashPassord(password);
     const verificationToken = generateVerificationToken();
 
-    const newUser = new User({
+    const newUser = await User.create({
       name,
       email,
       password: newPassword,
-      verification: {
-        token: verificationToken,
-        createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 300000), // Expires in 5 minutes
-      },
+      verificationToken: verificationToken,
+      verificationTokenCreatedAt: new Date(),
+      verificationTokenExpiresAt: new Date(Date.now() + 900000), // Expires in 15 minutes
     });
-
-    await newUser.save();
 
     const emailResult = await sendVerificationEmail(
       email,
@@ -56,7 +52,7 @@ exports.register = async (req, res) => {
       message:
         "User registered successfully! Please check your email for the verification code.",
       emailSent: emailResult.success,
-      userId: newUser._id,
+      userId: newUser.id,
       ...(process.env.NODE_ENV === "development" && {
         verificationToken: verificationToken,
       }),
@@ -72,7 +68,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       return res.status(400).json({ message: "User not found!" });
@@ -91,19 +87,19 @@ exports.login = async (req, res) => {
     }
 
     const tokenPayload = {
-      id: user._id,
+      id: user.id,
       email: user.email,
       role: user.role,
       name: user.name,
     };
 
     const token = generateToken(tokenPayload);
-    const refreshToken = generateRefreshToken({ id: user._id });
+    const refreshToken = generateRefreshToken({ id: user.id });
 
     res.status(200).json({
       message: "Login successful!",
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -127,7 +123,7 @@ exports.verifyUser = async (req, res) => {
   try {
     const { userId, verificationToken } = req.body;
 
-    const user = await User.findById(userId);
+    const user = await User.findByPk(userId);
 
     if (!user) {
       return res.status(400).json({ message: "User not found!" });
@@ -137,19 +133,27 @@ exports.verifyUser = async (req, res) => {
       return res.status(400).json({ message: "User is already verified!" });
     }
 
-    if (!user.verification || !user.verification.token) {
+    if (!user.verificationToken) {
       return res
         .status(400)
         .json({ message: "No verification token found or token expired!" });
     }
 
-    if (user.verification.token !== verificationToken) {
+    if (user.verificationToken !== verificationToken) {
       return res.status(400).json({ message: "Invalid verification token!" });
     }
 
-    user.isVerified = true;
-    user.verification = undefined;
-    await user.save();
+    // Check if token has expired
+    if (user.verificationTokenExpiresAt && new Date() > user.verificationTokenExpiresAt) {
+      return res.status(400).json({ message: "Verification token has expired! Please request a new one." });
+    }
+
+    await user.update({
+      isVerified: true,
+      verificationToken: null,
+      verificationTokenCreatedAt: null,
+      verificationTokenExpiresAt: null,
+    });
 
     const welcomeEmailResult = await sendWelcomeEmail(user.email, user.name);
 
@@ -159,19 +163,19 @@ exports.verifyUser = async (req, res) => {
 
     // Generate token for verified user
     const tokenPayload = {
-      id: user._id,
+      id: user.id,
       email: user.email,
       role: user.role,
       name: user.name,
     };
 
     const token = generateToken(tokenPayload);
-    const refreshToken = generateRefreshToken({ id: user._id });
+    const refreshToken = generateRefreshToken({ id: user.id });
 
     res.status(200).json({
       message: "Account verified successfully!",
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -194,7 +198,7 @@ exports.resendVerificationToken = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       return res.status(400).json({ message: "User not found!" });
@@ -206,13 +210,11 @@ exports.resendVerificationToken = async (req, res) => {
 
     const verificationToken = generateVerificationToken();
 
-    user.verification = {
-      token: verificationToken,
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 300000), // Expires in 5 minutes
-    };
-
-    await user.save();
+    await user.update({
+      verificationToken: verificationToken,
+      verificationTokenCreatedAt: new Date(),
+      verificationTokenExpiresAt: new Date(Date.now() + 900000), // Expires in 15 minutes
+    });
 
     const emailResult = await sendVerificationEmail(
       user.email,
@@ -227,7 +229,7 @@ exports.resendVerificationToken = async (req, res) => {
     res.status(200).json({
       message: "New verification token generated and sent to your email!",
       emailSent: emailResult.success,
-      userId: user._id,
+      userId: user.id,
       ...(process.env.NODE_ENV === "development" && {
         verificationToken: verificationToken,
       }),
@@ -247,7 +249,9 @@ exports.refreshToken = async (req, res) => {
     }
 
     const decoded = verifyToken(refreshToken);
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findByPk(decoded.id, {
+      attributes: { exclude: ["password"] },
+    });
 
     if (!user) {
       return res.status(401).json({ message: "User not found!" });
@@ -258,21 +262,21 @@ exports.refreshToken = async (req, res) => {
     }
 
     const tokenPayload = {
-      id: user._id,
+      id: user.id,
       email: user.email,
       role: user.role,
       name: user.name,
     };
 
     const newToken = generateToken(tokenPayload);
-    const newRefreshToken = generateRefreshToken({ id: user._id });
+    const newRefreshToken = generateRefreshToken({ id: user.id });
 
     res.status(200).json({
       message: "Token refreshed successfully!",
       token: newToken,
       refreshToken: newRefreshToken,
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -308,7 +312,7 @@ exports.getUserRole = async (req, res) => {
     res.status(200).json({
       message: "Role information retrieved successfully!",
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,

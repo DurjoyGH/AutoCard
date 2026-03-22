@@ -1,8 +1,7 @@
 require("dotenv").config();
-const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const User = require("./models/user");
-const connectDB = require("./configs/db");
+const User = require("./models/User");
+const { connectDB } = require("./configs/db");
 
 const seedAdmin = async () => {
   try {
@@ -20,7 +19,7 @@ const seedAdmin = async () => {
     };
 
     // Check if admin already exists
-    const existingAdmin = await User.findOne({ email: adminData.email });
+    const existingAdmin = await User.findOne({ where: { email: adminData.email } });
     if (existingAdmin) {
       console.log("Admin user already exists!");
       console.log("Email:", existingAdmin.email);
@@ -33,15 +32,13 @@ const seedAdmin = async () => {
     const hashedPassword = await bcrypt.hash(adminData.password, saltRounds);
 
     // Create admin user
-    const adminUser = new User({
+    const adminUser = await User.create({
       name: adminData.name,
       email: adminData.email,
       password: hashedPassword,
       role: adminData.role,
       isVerified: adminData.isVerified,
     });
-
-    await adminUser.save();
 
     console.log("✅ Admin user created successfully!");
     console.log("=====================================");

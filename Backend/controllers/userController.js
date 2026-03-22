@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const User = require('../models/User');
 const cloudinary = require('../configs/cloudinary');
 
 // Helper function to upload file to Cloudinary
@@ -45,7 +45,9 @@ const deleteFromCloudinary = async (publicId) => {
 // Get user profile
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password -verification');
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ['password', 'verificationToken', 'verificationTokenCreatedAt', 'verificationTokenExpiresAt'] },
+    });
     
     if (!user) {
       return res.status(404).json({
@@ -70,7 +72,7 @@ const getUserProfile = async (req, res) => {
 // Update user profile
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const {
       name,
       studentID,
@@ -83,7 +85,7 @@ const updateUserProfile = async (req, res) => {
     } = req.body;
 
     // Find the current user
-    const currentUser = await User.findById(userId);
+    const currentUser = await User.findByPk(userId);
     if (!currentUser) {
       return res.status(404).json({
         success: false,
@@ -155,23 +157,23 @@ const updateUserProfile = async (req, res) => {
     }
 
     // Update user in database
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-password -verification');
+    const updatedUser = await User.findByPk(userId);
+    await updatedUser.update(updateData);
+    const userWithoutPassword = await User.findByPk(userId, {
+      attributes: { exclude: ['password', 'verificationToken', 'verificationTokenCreatedAt', 'verificationTokenExpiresAt'] },
+    });
 
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
-      data: updatedUser
+      data: userWithoutPassword
     });
 
   } catch (error) {
     console.error('Update profile error:', error);
     
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
+    if (error.name === 'SequelizeValidationError') {
+      const errors = error.errors.map(err => err.message);
       return res.status(400).json({
         success: false,
         message: 'Validation error',
@@ -179,7 +181,7 @@ const updateUserProfile = async (req, res) => {
       });
     }
 
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({
         success: false,
         message: 'Email or Student ID already exists'
@@ -196,8 +198,8 @@ const updateUserProfile = async (req, res) => {
 // Delete profile picture
 const deleteProfilePicture = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
 
     if (!user) {
       return res.status(404).json({
@@ -219,7 +221,7 @@ const deleteProfilePicture = async (req, res) => {
     await deleteFromCloudinary(fullPublicId);
 
     // Remove from database
-    await User.findByIdAndUpdate(userId, { $unset: { profilePicture: 1 } });
+    await user.update({ profilePicture: null });
 
     res.status(200).json({
       success: true,
@@ -238,8 +240,8 @@ const deleteProfilePicture = async (req, res) => {
 // Delete signature
 const deleteSignature = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
 
     if (!user) {
       return res.status(404).json({
@@ -261,7 +263,7 @@ const deleteSignature = async (req, res) => {
     await deleteFromCloudinary(fullPublicId);
 
     // Remove from database
-    await User.findByIdAndUpdate(userId, { $unset: { signature: 1 } });
+    await user.update({ signature: null });
 
     res.status(200).json({
       success: true,

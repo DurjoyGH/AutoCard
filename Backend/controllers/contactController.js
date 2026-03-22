@@ -1,4 +1,6 @@
-const Contact = require("../models/contact");
+const Contact = require("../models/Contact");
+const User = require("../models/User");
+const { Op } = require("sequelize");
 const { sendContactConfirmationEmail, sendContactReplyEmail } = require("../services/email");
 
 // Submit contact form (Public - No auth required)
@@ -22,14 +24,12 @@ exports.submitContactForm = async (req, res) => {
     }
 
     // Create contact message
-    const contact = new Contact({
+    const contact = await Contact.create({
       name: name.trim(),
       email: email.trim().toLowerCase(),
       subject: subject.trim(),
       message: message.trim(),
     });
-
-    await contact.save();
 
     // Send confirmation email to user
     try {
@@ -41,7 +41,7 @@ exports.submitContactForm = async (req, res) => {
 
     res.status(201).json({
       message: "Your message has been sent successfully! We'll get back to you soon.",
-      contactId: contact._id,
+      contactId: contact.id,
     });
   } catch (error) {
     console.error("Submit contact form error:", error);
@@ -57,48 +57,55 @@ exports.getAllContacts = async (req, res) => {
   try {
     const { status, search, limit = 50, page = 1 } = req.query;
 
-    const query = {};
+    const where = {};
 
     // Filter by status
     if (status && ["pending", "replied", "closed"].includes(status)) {
-      query.status = status;
+      where.status = status;
     }
 
     // Search by name, email, or subject
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { subject: { $regex: search, $options: "i" } },
+      where[Op.or] = [
+        { name: { [Op.iLike]: `%${search}%` } },
+        { email: { [Op.iLike]: `%${search}%` } },
+        { subject: { [Op.iLike]: `%${search}%` } },
       ];
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const contacts = await Contact.find(query)
-      .populate("reply.repliedBy", "name email")
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip(skip);
-
-    const total = await Contact.countDocuments(query);
+    const { count, rows: contacts } = await Contact.findAndCountAll({
+      where,
+      include: [
+        {
+          model: User,
+          as: "repliedByUser",
+          attributes: ["name", "email"],
+          required: false,
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit: parseInt(limit),
+      offset: skip,
+    });
 
     // Get statistics
     const stats = {
-      total: await Contact.countDocuments(),
-      pending: await Contact.countDocuments({ status: "pending" }),
-      replied: await Contact.countDocuments({ status: "replied" }),
-      closed: await Contact.countDocuments({ status: "closed" }),
-      unread: await Contact.countDocuments({ isRead: false }),
+      total: await Contact.count(),
+      pending: await Contact.count({ where: { status: "pending" } }),
+      replied: await Contact.count({ where: { status: "replied" } }),
+      closed: await Contact.count({ where: { status: "closed" } }),
+      unread: await Contact.count({ where: { isRead: false } }),
     };
 
     res.status(200).json({
       contacts,
       pagination: {
-        total,
+        total: count,
         page: parseInt(page),
         limit: parseInt(limit),
-        pages: Math.ceil(total / parseInt(limit)),
+        pages: Math.ceil(count / parseInt(limit)),
       },
       stats,
     });
@@ -116,10 +123,16 @@ exports.getContactById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const contact = await Contact.findById(id).populate(
-      "reply.repliedBy",
-      "name email role"
-    );
+    const contact = await Contact.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "repliedByUser",
+          attributes: ["name", "email", "role"],
+          required: false,
+        },
+      ],
+    });
 
     if (!contact) {
       return res.status(404).json({
@@ -129,8 +142,7 @@ exports.getContactById = async (req, res) => {
 
     // Mark as read
     if (!contact.isRead) {
-      contact.isRead = true;
-      await contact.save();
+      await contact.update({ isRead: true });
     }
 
     res.status(200).json({
@@ -158,7 +170,7 @@ exports.replyToContact = async (req, res) => {
       });
     }
 
-    const contact = await Contact.findById(id);
+    const contact = await Contact.findByPk(id);
 
     if (!contact) {
       return res.status(404).json({
@@ -167,28 +179,36 @@ exports.replyToContact = async (req, res) => {
     }
 
     // Update contact with reply
-    contact.reply = {
-      message: replyMessage.trim(),
+    await contact.update({
+      replyMessage: replyMessage.trim(),
       repliedBy: adminId,
       repliedAt: new Date(),
-    };
-    contact.status = "replied";
-    contact.isRead = true;
+      status: "replied",
+      isRead: true,
+    });
 
-    await contact.save();
-
-    // Populate reply details
-    await contact.populate("reply.repliedBy", "name email");
+    // Reload with associations
+    const updatedContact = await Contact.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "repliedByUser",
+          attributes: ["name", "email"],
+          required: false,
+        },
+      ],
+    });
 
     // Send reply email to user
     try {
+      const admin = await User.findByPk(adminId);
       await sendContactReplyEmail(
         contact.email,
         contact.name,
         contact.subject,
         contact.message,
         replyMessage,
-        contact.reply.repliedBy.name
+        admin.name
       );
     } catch (emailError) {
       console.error("Failed to send reply email:", emailError);
@@ -197,7 +217,7 @@ exports.replyToContact = async (req, res) => {
 
     res.status(200).json({
       message: "Reply sent successfully",
-      contact,
+      contact: updatedContact,
     });
   } catch (error) {
     console.error("Reply to contact error:", error);
@@ -220,21 +240,29 @@ exports.updateContactStatus = async (req, res) => {
       });
     }
 
-    const contact = await Contact.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    ).populate("reply.repliedBy", "name email");
-
+    const contact = await Contact.findByPk(id);
     if (!contact) {
       return res.status(404).json({
         message: "Contact message not found",
       });
     }
 
+    await contact.update({ status });
+
+    const updatedContact = await Contact.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "repliedByUser",
+          attributes: ["name", "email"],
+          required: false,
+        },
+      ],
+    });
+
     res.status(200).json({
       message: "Status updated successfully",
-      contact,
+      contact: updatedContact,
     });
   } catch (error) {
     console.error("Update contact status error:", error);
@@ -250,13 +278,15 @@ exports.deleteContact = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const contact = await Contact.findByIdAndDelete(id);
+    const contact = await Contact.findByPk(id);
 
     if (!contact) {
       return res.status(404).json({
         message: "Contact message not found",
       });
     }
+
+    await contact.destroy();
 
     res.status(200).json({
       message: "Contact message deleted successfully",
@@ -276,17 +306,15 @@ exports.toggleReadStatus = async (req, res) => {
     const { id } = req.params;
     const { isRead } = req.body;
 
-    const contact = await Contact.findByIdAndUpdate(
-      id,
-      { isRead: isRead !== undefined ? isRead : true },
-      { new: true }
-    );
+    const contact = await Contact.findByPk(id);
 
     if (!contact) {
       return res.status(404).json({
         message: "Contact message not found",
       });
     }
+
+    await contact.update({ isRead: isRead !== undefined ? isRead : true });
 
     res.status(200).json({
       message: `Marked as ${contact.isRead ? "read" : "unread"}`,

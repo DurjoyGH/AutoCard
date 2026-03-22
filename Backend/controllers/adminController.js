@@ -1,19 +1,22 @@
-const User = require("../models/user");
-const CardApplication = require("../models/cardApplication");
+const User = require("../models/User");
+const CardApplication = require("../models/CardApplication");
 const bcrypt = require("bcrypt");
 const {
   sendApplicationApprovedEmail,
   sendApplicationRejectedEmail,
   sendNewAdminEmail,
 } = require("../services/email");
+const { Op } = require("sequelize");
 
 // Get all users (admin only)
 exports.getAllUsers = async (req, res) => {
   try {
     // Exclude password field and get all users except the requesting admin
-    const users = await User.find({ _id: { $ne: req.user.id } })
-      .select("-password -verification")
-      .sort({ createdAt: -1 });
+    const users = await User.findAll({
+      where: { id: { [Op.ne]: req.user.id } },
+      attributes: { exclude: ['password', 'verificationToken', 'verificationTokenCreatedAt', 'verificationTokenExpiresAt'] },
+      order: [["createdAt", "DESC"]],
+    });
 
     const totalUsers = users.length;
     const totalAdmins = users.filter((user) => user.role === "admin").length;
@@ -45,14 +48,16 @@ exports.getUserById = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId).select("-password -verification");
+    const user = await User.findByPk(userId, {
+      attributes: { exclude: ['password', 'verificationToken', 'verificationTokenCreatedAt', 'verificationTokenExpiresAt'] },
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Get user's application if exists
-    const application = await CardApplication.findOne({ userId: user._id });
+    const application = await CardApplication.findOne({ where: { userId: user.id } });
 
     res.status(200).json({
       message: "User details retrieved successfully",
@@ -74,28 +79,28 @@ exports.deleteUser = async (req, res) => {
     const { userId } = req.params;
 
     // Check if user exists
-    const user = await User.findById(userId);
+    const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Prevent deleting own account
-    if (user._id.toString() === req.user.id) {
+    if (user.id === req.user.id) {
       return res.status(400).json({
         message: "You cannot delete your own account",
       });
     }
 
     // Delete user's application if exists
-    await CardApplication.deleteOne({ userId: user._id });
+    await CardApplication.destroy({ where: { userId: user.id } });
 
     // Delete the user
-    await User.findByIdAndDelete(userId);
+    await user.destroy();
 
     res.status(200).json({
       message: "User deleted successfully",
       deletedUser: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
       },
@@ -121,25 +126,24 @@ exports.updateUserRole = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Prevent changing own role
-    if (user._id.toString() === req.user.id) {
+    if (user.id === req.user.id) {
       return res.status(400).json({
         message: "You cannot change your own role",
       });
     }
 
-    user.role = role;
-    await user.save();
+    await user.update({ role });
 
     res.status(200).json({
       message: `User role updated to ${role} successfully`,
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -159,12 +163,26 @@ exports.getAllApplications = async (req, res) => {
   try {
     const { status } = req.query; // Filter by status if provided
 
-    const query = status && status !== "all" ? { status } : {};
+    const where = status && status !== "all" ? { status } : {};
 
-    const applications = await CardApplication.find(query)
-      .populate("userId", "name email studentID phoneNumber")
-      .populate("reviewedBy", "name email")
-      .sort({ appliedAt: -1 });
+    const applications = await CardApplication.findAll({
+      where,
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: ["name", "email", "studentID", "phoneNumber"],
+          required: false,
+        },
+        {
+          model: User,
+          as: "reviewedByUser",
+          attributes: ["name", "email"],
+          required: false,
+        },
+      ],
+      order: [["appliedAt", "DESC"]],
+    });
 
     const stats = {
       total: applications.length,
@@ -192,10 +210,16 @@ exports.approveApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
 
-    const application = await CardApplication.findById(applicationId).populate(
-      "userId",
-      "name email"
-    );
+    const application = await CardApplication.findByPk(applicationId, {
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: ["name", "email"],
+          required: false,
+        },
+      ],
+    });
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
@@ -207,17 +231,17 @@ exports.approveApplication = async (req, res) => {
       });
     }
 
-    application.status = "approved";
-    application.reviewedAt = new Date();
-    application.reviewedBy = req.user.id;
-    application.rejectionReason = undefined; // Clear rejection reason if any
-
-    await application.save();
+    await application.update({
+      status: "approved",
+      reviewedAt: new Date(),
+      reviewedBy: req.user.id,
+      rejectionReason: null,
+    });
 
     // Send approval email to user
     const emailResult = await sendApplicationApprovedEmail(
-      application.userId.email,
-      application.userId.name,
+      application.User.email,
+      application.User.name,
       application
     );
 
@@ -251,10 +275,16 @@ exports.rejectApplication = async (req, res) => {
       });
     }
 
-    const application = await CardApplication.findById(applicationId).populate(
-      "userId",
-      "name email"
-    );
+    const application = await CardApplication.findByPk(applicationId, {
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: ["name", "email"],
+          required: false,
+        },
+      ],
+    });
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
@@ -266,17 +296,17 @@ exports.rejectApplication = async (req, res) => {
       });
     }
 
-    application.status = "rejected";
-    application.reviewedAt = new Date();
-    application.reviewedBy = req.user.id;
-    application.rejectionReason = rejectionReason;
-
-    await application.save();
+    await application.update({
+      status: "rejected",
+      reviewedAt: new Date(),
+      reviewedBy: req.user.id,
+      rejectionReason: rejectionReason,
+    });
 
     // Send rejection email to user
     const emailResult = await sendApplicationRejectedEmail(
-      application.userId.email,
-      application.userId.name,
+      application.User.email,
+      application.User.name,
       application,
       rejectionReason
     );
@@ -304,18 +334,18 @@ exports.deleteApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
 
-    const application = await CardApplication.findById(applicationId);
+    const application = await CardApplication.findByPk(applicationId);
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    await CardApplication.findByIdAndDelete(applicationId);
+    await application.destroy();
 
     res.status(200).json({
       message: "Application deleted successfully",
       deletedApplication: {
-        id: application._id,
+        id: application.id,
         name: application.name,
         email: application.email,
         status: application.status,
@@ -343,7 +373,7 @@ exports.createAdmin = async (req, res) => {
     }
 
     // Check if user with this email already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({
         message: "User with this email already exists",
@@ -355,17 +385,14 @@ exports.createAdmin = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create new admin user
-    const newAdmin = new User({
+    const newAdmin = await User.create({
       name,
       email,
       password: hashedPassword,
       phoneNumber: phoneNumber || "",
       role: "admin",
       isVerified: true, // Auto-verify admin users
-      verification: undefined, // No verification needed
     });
-
-    await newAdmin.save();
 
     // Send email with login credentials
     const emailResult = await sendNewAdminEmail(email, name, password);
@@ -377,7 +404,7 @@ exports.createAdmin = async (req, res) => {
     res.status(201).json({
       message: "Admin user created successfully",
       admin: {
-        id: newAdmin._id,
+        id: newAdmin.id,
         name: newAdmin.name,
         email: newAdmin.email,
         phoneNumber: newAdmin.phoneNumber,

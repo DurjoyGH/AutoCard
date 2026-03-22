@@ -1,5 +1,5 @@
-const CardApplication = require("../models/cardApplication");
-const User = require("../models/user");
+const CardApplication = require("../models/CardApplication");
+const User = require("../models/User");
 
 // Apply for library card
 exports.applyForCard = async (req, res) => {
@@ -7,7 +7,7 @@ exports.applyForCard = async (req, res) => {
     const userId = req.user.id;
 
     // Check if user exists
-    const user = await User.findById(userId);
+    const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -35,7 +35,7 @@ exports.applyForCard = async (req, res) => {
     }
 
     // Check if user already has an application
-    const existingApplication = await CardApplication.findOne({ userId });
+    const existingApplication = await CardApplication.findOne({ where: { userId } });
     if (existingApplication) {
       return res.status(400).json({
         message: "You have already applied for a library card",
@@ -44,8 +44,8 @@ exports.applyForCard = async (req, res) => {
     }
 
     // Create new application with user's data
-    const application = new CardApplication({
-      userId: user._id,
+    const application = await CardApplication.create({
+      userId: user.id,
       name: user.name,
       email: user.email,
       studentID: user.studentID,
@@ -58,8 +58,6 @@ exports.applyForCard = async (req, res) => {
       profilePicture: user.profilePicture,
       signature: user.signature,
     });
-
-    await application.save();
 
     res.status(201).json({
       message: "Application submitted successfully",
@@ -79,7 +77,7 @@ exports.getApplicationStatus = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const application = await CardApplication.findOne({ userId });
+    const application = await CardApplication.findOne({ where: { userId } });
 
     if (!application) {
       return res.status(404).json({

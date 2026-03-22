@@ -1,15 +1,26 @@
 require("colors");
-const mongoose = require("mongoose");
-const dbConnection = process.env.DB_URL;
+const { Sequelize } = require("sequelize");
+
+const sequelize = new Sequelize(process.env.DB_URL, {
+  dialect: "postgres",
+  logging: false,
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  },
+});
 
 const connectDB = async () => {
-  mongoose
-    .connect(dbConnection, {})
-    .then(() => console.log("Database connection established".green.bold))
-    .catch((err) => {
-      console.error("Database connection failed".red.bold);
-      console.error(err);
-    });
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync({ alter: true });
+    console.log("Database connection established".green.bold);
+  } catch (err) {
+    console.error("Database connection failed".red.bold);
+    console.error(err);
+  }
 };
 
-module.exports = connectDB;
+module.exports = { sequelize, connectDB };

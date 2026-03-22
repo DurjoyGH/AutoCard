@@ -1,5 +1,5 @@
 const { verifyToken } = require("../services/jwt");
-const User = require("../models/user");
+const User = require("../models/User");
 
 const authenticateToken = async (req, res, next) => {
   try {
@@ -11,7 +11,9 @@ const authenticateToken = async (req, res, next) => {
 
     const decoded = verifyToken(token);
     
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findByPk(decoded.id, {
+      attributes: { exclude: ['password'] }
+    });
     
     if (!user) {
       return res.status(401).json({ message: "User not found!" });
@@ -63,7 +65,7 @@ const requireOwnershipOrAdmin = (userIdField = 'userId') => {
   return (req, res, next) => {
     const resourceUserId = req.params[userIdField] || req.body[userIdField];
     
-    if (req.user.role === 'admin' || req.user._id.toString() === resourceUserId) {
+    if (req.user.role === 'admin' || req.user.id === resourceUserId) {
       next();
     } else {
       return res.status(403).json({ 

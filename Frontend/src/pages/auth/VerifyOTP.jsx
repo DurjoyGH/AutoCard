@@ -8,7 +8,7 @@ const VerifyOTP = () => {
   const [otp, setOtp] = useState(['', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(900); // 15 minutes in seconds
   const [canResend, setCanResend] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
