@@ -22,11 +22,12 @@ app.use(
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://auto-card.onrender.com",
-  "https://auto-card-backend.onrender.com",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:3000",
+  "https://auto-card-just.vercel.app",
   "https://auto-card-backend.vercel.app",
   "https://auto-card-backend.vercel.app/api",
-  "https://auto-card-just.vercel.app",
 ];
 
 const corsOptions = {
