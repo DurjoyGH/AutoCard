@@ -210,6 +210,10 @@ exports.approveApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
 
+    if (!applicationId) {
+      return res.status(400).json({ message: "Application ID is required" });
+    }
+
     const application = await CardApplication.findByPk(applicationId, {
       include: [
         {
@@ -240,8 +244,8 @@ exports.approveApplication = async (req, res) => {
 
     // Send approval email to user
     const emailResult = await sendApplicationApprovedEmail(
-      application.User.email,
-      application.User.name,
+      application.applicant.email,
+      application.applicant.name,
       application
     );
 
@@ -268,6 +272,10 @@ exports.rejectApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
     const { rejectionReason } = req.body;
+
+    if (!applicationId) {
+      return res.status(400).json({ message: "Application ID is required" });
+    }
 
     if (!rejectionReason || rejectionReason.trim() === "") {
       return res.status(400).json({
@@ -305,8 +313,8 @@ exports.rejectApplication = async (req, res) => {
 
     // Send rejection email to user
     const emailResult = await sendApplicationRejectedEmail(
-      application.User.email,
-      application.User.name,
+      application.applicant.email,
+      application.applicant.name,
       application,
       rejectionReason
     );
@@ -333,6 +341,10 @@ exports.rejectApplication = async (req, res) => {
 exports.deleteApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
+
+    if (!applicationId) {
+      return res.status(400).json({ message: "Application ID is required" });
+    }
 
     const application = await CardApplication.findByPk(applicationId);
 
