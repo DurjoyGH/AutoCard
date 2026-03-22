@@ -288,7 +288,7 @@ const AdminDashboard = () => {
             // Real activities
             recentActivities.map((activity) => (
               <div 
-                key={activity._id}
+                key={activity.id}
                 onClick={() => navigate('/admin/applications')}
                 className="flex items-center justify-between p-4 bg-[#598392]/5 hover:bg-[#598392]/10 border border-[#598392]/10 rounded-xl transition-all duration-200 cursor-pointer group"
               >

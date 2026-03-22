@@ -74,7 +74,7 @@ const UserResponse = () => {
 
   const openViewModal = async (contact) => {
     try {
-      const response = await getContactById(contact._id);
+      const response = await getContactById(contact.id);
       setViewModal({ isOpen: true, contact: response.contact });
     } catch (error) {
       console.error('Error fetching contact:', error);
@@ -102,7 +102,7 @@ const UserResponse = () => {
 
     try {
       setReplyModal(prev => ({ ...prev, isReplying: true }));
-      await replyToContact(replyModal.contact._id, replyModal.message);
+      await replyToContact(replyModal.contact.id, replyModal.message);
       showToast.success('Reply sent successfully! Email notification sent to user.');
       closeReplyModal();
       loadContacts();
@@ -125,7 +125,7 @@ const UserResponse = () => {
   const handleDelete = async () => {
     try {
       setDeleteModal(prev => ({ ...prev, isDeleting: true }));
-      await deleteContact(deleteModal.contact._id);
+      await deleteContact(deleteModal.contact.id);
       showToast.success('Message deleted successfully');
       closeDeleteModal();
       loadContacts();
@@ -286,7 +286,7 @@ const UserResponse = () => {
           <div className="space-y-4">
             {filteredContacts.map((contact) => (
               <div
-                key={contact._id}
+                key={contact.id}
                 className={`bg-[#01161e]/50 backdrop-blur-xl border border-[#598392]/20 rounded-2xl p-6 hover:border-[#598392]/40 transition-all duration-200 ${
                   !contact.isRead ? 'ring-2 ring-purple-500/20' : ''
                 }`}

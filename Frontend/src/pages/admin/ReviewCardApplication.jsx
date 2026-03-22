@@ -135,7 +135,7 @@ const ReviewCardApplication = () => {
     try {
       setApproveModal((prev) => ({ ...prev, isApproving: true }));
       
-      await approveApplication(approveModal.application._id);
+      await approveApplication(approveModal.application.id);
       
       showToast.success(`Application approved for ${approveModal.application.name}`);
       
@@ -175,7 +175,7 @@ const ReviewCardApplication = () => {
     try {
       setRejectModal((prev) => ({ ...prev, isSubmitting: true }));
       await rejectApplication(
-        rejectModal.application._id,
+        rejectModal.application.id,
         rejectModal.rejectionReason
       );
       showToast.success(`Application rejected for ${rejectModal.application.name}`);
@@ -207,7 +207,7 @@ const ReviewCardApplication = () => {
   const handleDelete = async () => {
     try {
       setDeleteModal((prev) => ({ ...prev, isDeleting: true }));
-      await deleteApplication(deleteModal.application._id);
+      await deleteApplication(deleteModal.application.id);
       showToast.success(`Application deleted for ${deleteModal.application.name}`);
       closeDeleteModal();
       fetchApplications();
@@ -504,7 +504,7 @@ const ReviewCardApplication = () => {
         ) : (
           filteredApplications.map((application) => (
             <div
-              key={application._id}
+              key={application.id}
               className="bg-[#01161e]/50 backdrop-blur-xl border border-[#598392]/20 rounded-xl p-6 hover:border-[#598392]/40 transition-all"
             >
               <div className="flex flex-col lg:flex-row gap-6">

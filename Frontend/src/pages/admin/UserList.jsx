@@ -87,12 +87,12 @@ const UserList = () => {
     try {
       setDeleteModal((prev) => ({ ...prev, isDeleting: true }));
       
-      await deleteUser(deleteModal.user._id);
+      await deleteUser(deleteModal.user.id);
       
       showToast.success(`User ${deleteModal.user.name} deleted successfully`);
       
       // Update users list
-      setUsers((prev) => prev.filter((user) => user._id !== deleteModal.user._id));
+      setUsers((prev) => prev.filter((user) => user.id !== deleteModal.user.id));
       
       closeDeleteModal();
       
@@ -271,7 +271,7 @@ const UserList = () => {
               </thead>
               <tbody className="divide-y divide-[#598392]/10">
                 {filteredUsers.map((user) => (
-                  <tr key={user._id} className="hover:bg-[#598392]/5 transition-colors">
+                  <tr key={user.id} className="hover:bg-[#598392]/5 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
