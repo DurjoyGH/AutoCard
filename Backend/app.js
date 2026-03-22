@@ -25,6 +25,7 @@ const allowedOrigins = [
   "https://auto-card.onrender.com",
   "https://auto-card-backend.onrender.com",
   "https://auto-card-backend.vercel.app",
+  "https://auto-card-backend.vercel.app/api",
   "https://auto-card-just.vercel.app",
 ];
 
