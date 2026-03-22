@@ -123,6 +123,10 @@ exports.getContactById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (!id) {
+      return res.status(400).json({ message: "Contact ID is required" });
+    }
+
     const contact = await Contact.findByPk(id, {
       include: [
         {
@@ -163,6 +167,10 @@ exports.replyToContact = async (req, res) => {
     const { id } = req.params;
     const { replyMessage } = req.body;
     const adminId = req.user.id;
+
+    if (!id) {
+      return res.status(400).json({ message: "Contact ID is required" });
+    }
 
     if (!replyMessage || replyMessage.trim() === "") {
       return res.status(400).json({
@@ -234,6 +242,10 @@ exports.updateContactStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    if (!id) {
+      return res.status(400).json({ message: "Contact ID is required" });
+    }
+
     if (!status || !["pending", "replied", "closed"].includes(status)) {
       return res.status(400).json({
         message: "Invalid status. Must be: pending, replied, or closed",
@@ -277,6 +289,10 @@ exports.updateContactStatus = async (req, res) => {
 exports.deleteContact = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "Contact ID is required" });
+    }
 
     const contact = await Contact.findByPk(id);
 

@@ -363,17 +363,17 @@ const UserResponse = () => {
                 </div>
 
                 {/* Show reply if exists */}
-                {contact.reply && contact.reply.message && (
+                {contact.replyMessage && (
                   <div className="mt-4 pt-4 border-t border-[#598392]/20">
                     <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
                       <div className="flex items-start gap-2 mb-2">
                         <MessageCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
                           <p className="text-green-400 font-medium text-sm mb-1">Admin Reply:</p>
-                          <p className="text-white text-sm whitespace-pre-wrap">{contact.reply.message}</p>
+                          <p className="text-white text-sm whitespace-pre-wrap">{contact.replyMessage}</p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-[#598392]/70">
-                            <span>Replied by: {contact.reply.repliedBy?.name || 'Admin'}</span>
-                            <span>{new Date(contact.reply.repliedAt).toLocaleString()}</span>
+                            <span>Replied by: {contact.repliedByUser?.name || 'Admin'}</span>
+                            <span>{new Date(contact.repliedAt).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -444,16 +444,16 @@ const UserResponse = () => {
                 </div>
 
                 {/* Reply if exists */}
-                {viewModal.contact.reply && viewModal.contact.reply.message && (
+                {viewModal.contact.replyMessage && viewModal.contact.replyMessage && (
                   <div>
                     <h3 className="text-green-400 font-semibold mb-2">Admin Reply</h3>
                     <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
                       <p className="text-white whitespace-pre-wrap mb-3">
-                        {viewModal.contact.reply.message}
+                        {viewModal.contact.replyMessage}
                       </p>
                       <div className="flex items-center gap-4 text-xs text-[#598392]/70">
-                        <span>Replied by: {viewModal.contact.reply.repliedBy?.name || 'Admin'}</span>
-                        <span>{new Date(viewModal.contact.reply.repliedAt).toLocaleString()}</span>
+                        <span>Replied by: {viewModal.contact.repliedByUser?.name || 'Admin'}</span>
+                        <span>{new Date(viewModal.contact.repliedAt).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
