@@ -95,7 +95,11 @@ const CardApplication = sequelize.define(
   }
 );
 
-User.hasMany(CardApplication, { foreignKey: "userId" });
-CardApplication.belongsTo(User, { foreignKey: "userId" });
+// Associations
+User.hasMany(CardApplication, { foreignKey: "userId", as: "applications" });
+CardApplication.belongsTo(User, { foreignKey: "userId", as: "applicant" });
+
+// Association for reviewer (admin who reviewed the application)
+CardApplication.belongsTo(User, { foreignKey: "reviewedBy", as: "reviewer" });
 
 module.exports = CardApplication;

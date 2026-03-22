@@ -170,13 +170,13 @@ exports.getAllApplications = async (req, res) => {
       include: [
         {
           model: User,
-          as: "User",
+          as: "applicant",
           attributes: ["name", "email", "studentID", "phoneNumber"],
           required: false,
         },
         {
           model: User,
-          as: "reviewedByUser",
+          as: "reviewer",
           attributes: ["name", "email"],
           required: false,
         },
@@ -214,7 +214,7 @@ exports.approveApplication = async (req, res) => {
       include: [
         {
           model: User,
-          as: "User",
+          as: "applicant",
           attributes: ["name", "email"],
           required: false,
         },
@@ -279,7 +279,7 @@ exports.rejectApplication = async (req, res) => {
       include: [
         {
           model: User,
-          as: "User",
+          as: "applicant",
           attributes: ["name", "email"],
           required: false,
         },
