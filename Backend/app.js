@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
-const { swaggerConfig, swaggerUIOptions } = require('./configs/swagger');
+const { swaggerConfig, swaggerUIOptions } = require("./configs/swagger");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const applyRoutes = require("./routes/applyRoutes");
@@ -14,10 +14,20 @@ const contactRoutes = require("./routes/contactRoutes");
 const app = express();
 
 const swaggerSpec = swaggerJsdoc(swaggerConfig);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUIOptions));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, swaggerUIOptions),
+);
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://auto-card.onrender.com", "https://auto-card-backend.onrender.com"],
+  origin: [
+    "http://localhost:5173",
+    "https://auto-card.onrender.com",
+    "https://auto-card-backend.onrender.com",
+    "https://auto-card-snowy.vercel.app",
+    "https://auto-card-just.vercel.app",
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -35,8 +45,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/contact", contactRoutes);
 
 app.get("/", (req, res) => {
-    res.send("API is Running!")
-})
+  res.send("API is Running!");
+});
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
