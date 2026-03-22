@@ -20,20 +20,35 @@ app.use(
   swaggerUi.setup(swaggerSpec, swaggerUIOptions),
 );
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://auto-card.onrender.com",
+  "https://auto-card-backend.onrender.com",
+  "https://auto-card-snowy.vercel.app",
+  "https://auto-card-just.vercel.app",
+];
+
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://auto-card.onrender.com",
-    "https://auto-card-backend.onrender.com",
-    "https://auto-card-snowy.vercel.app",
-    "https://auto-card-just.vercel.app",
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+
+    const isExactMatch = allowedOrigins.includes(origin);
+    const isVercelPreview = /^https:\/\/auto-card-[a-z0-9-]+\.vercel\.app$/.test(origin);
+
+    if (isExactMatch || isVercelPreview) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
