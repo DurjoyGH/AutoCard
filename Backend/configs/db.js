@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 
 const sequelize = new Sequelize(process.env.DB_URL, {
   dialect: "postgres",
+  dialectModule: require('pg'),
   logging: false,
   dialectOptions: {
     ssl: {
