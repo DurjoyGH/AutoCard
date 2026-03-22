@@ -24,7 +24,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://auto-card.onrender.com",
   "https://auto-card-backend.onrender.com",
-  "https://auto-card-snowy.vercel.app",
+  "https://auto-card-backend.vercel.app",
   "https://auto-card-just.vercel.app",
 ];
 
