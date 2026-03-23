@@ -1,17 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 
 const QRcodeComponent = ({ cardId }) => {
-  const canvasRef = useRef(null);
+  const [qrDataUrl, setQrDataUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const generateQRCode = async () => {
-      if (canvasRef.current && cardId) {
+      if (cardId) {
         try {
+          setIsLoading(true);
           // Create the URL that will be encoded in the QR code
           const scanUrl = `${window.location.origin}/scan/${cardId}`;
           
-          await QRCode.toCanvas(canvasRef.current, scanUrl, {
+          // Generate QR code as data URL instead of canvas
+          const dataUrl = await QRCode.toDataURL(scanUrl, {
             errorCorrectionLevel: 'H',
             type: 'image/png',
             quality: 0.95,
@@ -22,8 +25,12 @@ const QRcodeComponent = ({ cardId }) => {
               light: '#ffffff',
             },
           });
+          
+          setQrDataUrl(dataUrl);
+          setIsLoading(false);
         } catch (error) {
           console.error('Error generating QR code:', error);
+          setIsLoading(false);
         }
       }
     };
@@ -31,13 +38,23 @@ const QRcodeComponent = ({ cardId }) => {
     generateQRCode();
   }, [cardId]);
 
+  if (isLoading) {
+    return <div style={{ width: '120px', height: '120px', background: '#f0f0f0', borderRadius: '4px' }} />;
+  }
+
+  if (!qrDataUrl) {
+    return <div style={{ width: '120px', height: '120px', background: '#f0f0f0', borderRadius: '4px' }} />;
+  }
+
   return (
-    <canvas 
-      ref={canvasRef} 
+    <img 
+      src={qrDataUrl} 
+      alt="QR Code" 
       style={{ 
         width: '120px', 
         height: '120px',
-        imageRendering: 'crisp-edges'
+        imageRendering: 'crisp-edges',
+        display: 'block'
       }} 
     />
   );

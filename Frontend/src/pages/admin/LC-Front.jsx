@@ -65,31 +65,30 @@ const LCFront = ({ applicationData }) => {
               </p>
             </div>
 
-            {/* Signature Section */}
-            <div className="mt-6 mb-2">
-              <div className="flex justify-end mb-1 mr-4">
-                <div className="h-16 flex items-center justify-end">
+            {/* Signature and QR Code Section - Side by Side */}
+            <div className="mt-6 mb-2 flex justify-between items-end gap-4">
+              {/* QR Code on left */}
+              {cardData.id && (
+                <div className="flex flex-col items-center">
+                  <QRcodeComponent cardId={cardData.id} />
+                </div>
+              )}
+              
+              {/* Signature on right */}
+              <div className="flex flex-col items-end flex-1">
+                <div className="mb-1">
                   <img 
                     src={cardData.signature} 
                     alt="Signature" 
-                    className="h-full object-contain"
+                    className="h-16 object-contain"
                     style={{ filter: 'grayscale(100%)' }}
                   />
                 </div>
-              </div>
-              <div className="text-right mr-4">
                 <p className="text-gray-700 font-serif text-base italic">
                   Holder's Signature
                 </p>
               </div>
             </div>
-
-            {/* QR Code at bottom left */}
-            {cardData.id && (
-              <div className="mt-6 ml-4">
-                <QRcodeComponent cardId={cardData.id} />
-              </div>
-            )}
           </div>
         </div>
     </div>

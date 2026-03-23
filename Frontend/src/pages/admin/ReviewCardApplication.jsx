@@ -924,11 +924,11 @@ const ReviewCardApplication = () => {
             {/* Library Card - Visible */}
             <div className="flex justify-center">
               {showCardBack ? (
-                <div ref={cardBackRef}>
+                <div ref={cardBackRef} key={`back-${cardPreviewModal.application?.id}`}>
                   <LCBack applicationData={cardPreviewModal.application} />
                 </div>
               ) : (
-                <div ref={cardFrontRef}>
+                <div ref={cardFrontRef} key={`front-${cardPreviewModal.application?.id}`}>
                   <LCFront applicationData={cardPreviewModal.application} />
                 </div>
               )}
@@ -937,12 +937,12 @@ const ReviewCardApplication = () => {
             {/* Hidden Cards for PDF Generation */}
             <div className="absolute -left-[9999px] -top-[9999px]">
               {!showCardBack && (
-                <div ref={cardBackRef}>
+                <div ref={cardBackRef} key={`hidden-back-${cardPreviewModal.application?.id}`}>
                   <LCBack applicationData={cardPreviewModal.application} />
                 </div>
               )}
               {showCardBack && (
-                <div ref={cardFrontRef}>
+                <div ref={cardFrontRef} key={`hidden-front-${cardPreviewModal.application?.id}`}>
                   <LCFront applicationData={cardPreviewModal.application} />
                 </div>
               )}
