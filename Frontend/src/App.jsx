@@ -13,6 +13,7 @@ import UserList from './pages/admin/UserList';
 import ReviewCardApplication from './pages/admin/ReviewCardApplication';
 import AddAdmin from './pages/admin/AddAdmin';
 import UserResponse from './pages/admin/UserResponse';
+import ScannedPage from './pages/admin/ScannedPage';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import VerifyOTP from './pages/auth/VerifyOTP';
@@ -61,6 +62,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-otp" element={<VerifyOTP />} />
+
+        {/* Public Scan Route - No authentication required */}
+        <Route path="/scan/:cardId" element={<ScannedPage />} />
         
         {/* 404 Route */}
         <Route path="*" element={<div className="p-8 text-white min-h-screen bg-[#01161e] flex items-center justify-center">404 - Page Not Found</div>} />

@@ -10,6 +10,7 @@ const userRoutes = require("./routes/userRoutes");
 const applyRoutes = require("./routes/applyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const scanRoutes = require("./routes/scanRoutes");
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/apply", applyRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/scan", scanRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is Running!");

@@ -1,8 +1,10 @@
 import React from 'react';
+import QRcodeComponent from './QRcode';
 
 const LCFront = ({ applicationData }) => {
   // Use provided application data only
   const cardData = {
+    id: applicationData?.id || '',
     photo: applicationData?.profilePicture || '',
     name: applicationData?.name || '',
     roll: applicationData?.studentID || '',
@@ -81,6 +83,13 @@ const LCFront = ({ applicationData }) => {
                 </p>
               </div>
             </div>
+
+            {/* QR Code at bottom left */}
+            {cardData.id && (
+              <div className="mt-6 ml-4">
+                <QRcodeComponent cardId={cardData.id} />
+              </div>
+            )}
           </div>
         </div>
     </div>
