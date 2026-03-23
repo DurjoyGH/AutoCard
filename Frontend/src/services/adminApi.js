@@ -3,6 +3,9 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 // Helper function to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Authentication token not found. Please login again.');
+  }
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -204,6 +207,11 @@ export const createAdmin = async (adminData) => {
     const data = await response.json();
 
     if (!response.ok) {
+      // Handle invalid or expired token
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('token');
+        throw new Error(data.message || 'Your session has expired. Please login again.');
+      }
       throw new Error(data.message || 'Failed to create admin');
     }
 

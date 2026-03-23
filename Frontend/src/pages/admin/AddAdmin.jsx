@@ -49,10 +49,8 @@ const AddAdmin = () => {
     // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain uppercase, lowercase, and number';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
     }
 
     // Phone number validation (optional but if provided, must be valid)
@@ -238,7 +236,7 @@ const AddAdmin = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Enter a strong password"
+                placeholder="Enter a password (minimum 6 characters)"
                 className={`w-full pl-10 pr-20 py-3 bg-[#598392]/10 border ${
                   errors.password ? 'border-red-500' : 'border-[#598392]/30'
                 } rounded-lg text-white placeholder-[#598392]/60 focus:outline-none focus:ring-2 focus:ring-[#598392]/50`}
@@ -256,7 +254,7 @@ const AddAdmin = () => {
             )}
             <div className="flex justify-between items-center mt-2">
               <p className="text-[#598392]/60 text-xs">
-                Min 8 characters, include uppercase, lowercase, and number
+                Minimum 6 characters required
               </p>
               <button
                 type="button"
@@ -281,7 +279,7 @@ const AddAdmin = () => {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                placeholder="+1 (555) 123-4567"
+                placeholder="+880 1X XXX XXXXX"
                 className={`w-full pl-10 pr-4 py-3 bg-[#598392]/10 border ${
                   errors.phoneNumber ? 'border-red-500' : 'border-[#598392]/30'
                 } rounded-lg text-white placeholder-[#598392]/60 focus:outline-none focus:ring-2 focus:ring-[#598392]/50`}
