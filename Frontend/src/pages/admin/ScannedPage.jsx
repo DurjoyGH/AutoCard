@@ -63,13 +63,13 @@ const ScannedPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#01161e] via-[#0f3460] to-[#01161e] py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
+        {/* Home Button */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2 text-[#598392] hover:text-white transition-colors mb-6"
         >
           <ChevronLeft className="w-5 h-5" />
-          Go Back
+          Go Home
         </button>
 
         {/* Validity Banner */}
