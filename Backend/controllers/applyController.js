@@ -1,5 +1,6 @@
 const CardApplication = require("../models/CardApplication");
 const User = require("../models/User");
+const PaymentDetail = require("../models/PaymentDetail");
 
 // Apply for library card
 exports.applyForCard = async (req, res) => {
@@ -86,9 +87,23 @@ exports.getApplicationStatus = async (req, res) => {
       });
     }
 
+    const latestPayment = await PaymentDetail.findOne({
+      where: {
+        userId,
+        cardApplicationId: application.id,
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    const isPaymentDone = latestPayment?.status === "completed";
+
     res.status(200).json({
       hasApplication: true,
       application,
+      isPaymentDone,
+      paymentStatus: latestPayment?.status || "unpaid",
+      payment: latestPayment || null,
+      canDownloadCard: application.status === "approved" && isPaymentDone,
     });
   } catch (error) {
     console.error("Get application status error:", error);

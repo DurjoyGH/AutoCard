@@ -3,6 +3,11 @@ import { showToast } from '../../components/Toast/CustomToast';
 import { useAuth } from '../../context/AuthContext';
 import { getUserProfile, updateUserProfile, deleteProfilePicture, deleteSignature } from '../../services/userApi';
 import { applyForCard, getApplicationStatus } from '../../services/applyApi';
+import { makePayment } from '../../services/paymentApi';
+import LCFront from '../admin/LC-Front';
+import LCBack from '../admin/LC-Back';
+import domtoimage from 'dom-to-image-more';
+import { jsPDF } from 'jspdf';
 
 const UserProfile = () => {
   const { user, updateUser } = useAuth();
@@ -29,9 +34,15 @@ const UserProfile = () => {
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [hasApplication, setHasApplication] = useState(false);
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
+  const [paymentStatusText, setPaymentStatusText] = useState('unpaid');
+  const [isPaying, setIsPaying] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const photoInputRef = useRef(null);
   const signatureInputRef = useRef(null);
+  const cardFrontRef = useRef(null);
+  const cardBackRef = useRef(null);
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const districts = [
@@ -135,15 +146,21 @@ const UserProfile = () => {
       if (response.hasApplication) {
         setHasApplication(true);
         setApplicationStatus(response.application);
+        setIsPaymentDone(!!response.isPaymentDone);
+        setPaymentStatusText(response.paymentStatus || 'unpaid');
       } else {
         setHasApplication(false);
         setApplicationStatus(null);
+        setIsPaymentDone(false);
+        setPaymentStatusText('unpaid');
       }
     } catch (error) {
       console.error('Error checking application status:', error);
       // User hasn't applied yet or error occurred
       setHasApplication(false);
       setApplicationStatus(null);
+      setIsPaymentDone(false);
+      setPaymentStatusText('unpaid');
     }
   };
 
@@ -164,6 +181,148 @@ const UserProfile = () => {
       showToast.error(error.message || 'Failed to submit application. Please try again.');
     } finally {
       setIsApplying(false);
+    }
+  };
+
+  const handleMakePayment = async () => {
+    if (!applicationStatus?.id) {
+      showToast.error('Application not found for payment');
+      return;
+    }
+
+    try {
+      setIsPaying(true);
+      const loadingToast = showToast.loading('Redirecting to SSLCommerz...');
+      const response = await makePayment(applicationStatus.id);
+      showToast.dismiss(loadingToast);
+
+      if (response?.url) {
+        window.location.href = response.url;
+        return;
+      }
+
+      setIsPaying(false);
+      showToast.error('Unable to start payment');
+    } catch (error) {
+      setIsPaying(false);
+      showToast.error(error.message || 'Failed to initiate payment');
+    }
+  };
+
+  const downloadCardAsPDF = async () => {
+    if (!applicationStatus || !cardFrontRef.current || !cardBackRef.current) {
+      showToast.error('Card is not ready for download');
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const frontCardElement = cardFrontRef.current.querySelector('.bg-white.rounded-2xl');
+      const backCardElement = cardBackRef.current.querySelector('.bg-white.rounded-2xl');
+
+      if (!frontCardElement || !backCardElement) {
+        showToast.error('Card elements not found');
+        setIsDownloading(false);
+        return;
+      }
+
+      const frontClone = frontCardElement.cloneNode(true);
+      const backClone = backCardElement.cloneNode(true);
+
+      frontClone.style.boxShadow = 'none';
+      frontClone.style.borderRadius = '0';
+      frontClone.style.aspectRatio = 'unset';
+      frontClone.style.height = 'auto';
+      frontClone.style.minHeight = '0';
+      frontClone.style.overflow = 'visible';
+
+      backClone.style.boxShadow = 'none';
+      backClone.style.borderRadius = '0';
+      backClone.style.aspectRatio = 'unset';
+      backClone.style.height = 'auto';
+      backClone.style.minHeight = '0';
+      backClone.style.overflow = 'visible';
+
+      const removeElementBorders = (element) => {
+        element.querySelectorAll('*').forEach((el) => {
+          el.style.border = 'none';
+          el.style.boxShadow = 'none';
+        });
+
+        element.querySelectorAll('.border-2, .border').forEach((el) => {
+          el.style.border = 'none';
+        });
+      };
+
+      removeElementBorders(frontClone);
+      removeElementBorders(backClone);
+
+      frontClone.style.position = 'absolute';
+      frontClone.style.left = '-9999px';
+      frontClone.style.top = '-9999px';
+      backClone.style.position = 'absolute';
+      backClone.style.left = '-9999px';
+      backClone.style.top = '-9999px';
+
+      document.body.appendChild(frontClone);
+      document.body.appendChild(backClone);
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const initialFrontWidth = frontClone.offsetWidth;
+      const initialBackWidth = backClone.offsetWidth;
+      const targetWidth = Math.max(initialFrontWidth, initialBackWidth);
+
+      frontClone.style.width = `${targetWidth}px`;
+      backClone.style.width = `${targetWidth}px`;
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const frontWidth = frontClone.offsetWidth;
+      const frontHeight = frontClone.offsetHeight;
+      const backWidth = backClone.offsetWidth;
+      const backHeight = backClone.offsetHeight;
+
+      const frontImageData = await domtoimage.toPng(frontClone, {
+        quality: 1,
+        bgcolor: '#ffffff',
+        width: frontWidth,
+        height: frontHeight,
+      });
+
+      const backImageData = await domtoimage.toPng(backClone, {
+        quality: 1,
+        bgcolor: '#ffffff',
+        width: backWidth,
+        height: backHeight,
+      });
+
+      document.body.removeChild(frontClone);
+      document.body.removeChild(backClone);
+
+      const pdfWidth = Math.max(frontWidth, backWidth);
+      const pdfHeight = Math.max(frontHeight, backHeight);
+      const orientation = pdfWidth > pdfHeight ? 'landscape' : 'portrait';
+
+      const pdf = new jsPDF({
+        orientation,
+        unit: 'px',
+        format: [pdfWidth, pdfHeight],
+        compress: true,
+      });
+
+      pdf.addImage(frontImageData, 'PNG', 0, 0, pdfWidth, pdfHeight, '', 'FAST');
+      pdf.addPage([pdfWidth, pdfHeight], orientation);
+      pdf.addImage(backImageData, 'PNG', 0, 0, pdfWidth, pdfHeight, '', 'FAST');
+
+      const fileName = `LibraryCard_${applicationStatus.name.replace(/\s+/g, '_')}_${applicationStatus.studentID}.pdf`;
+      pdf.save(fileName);
+      showToast.success('Library card downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showToast.error('Failed to download card. Please try again.');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -353,6 +512,14 @@ const UserProfile = () => {
   };
 
   const canApplyForCard = profileCompletion === 100 && !hasApplication;
+  const canMakePayment =
+    hasApplication &&
+    applicationStatus?.status === 'approved' &&
+    !isPaymentDone;
+  const canDownloadCard =
+    hasApplication &&
+    applicationStatus?.status === 'approved' &&
+    isPaymentDone;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -433,6 +600,10 @@ const UserProfile = () => {
                 <p className="mt-2">
                   <span className="font-medium">Status: </span>
                   <span className="font-bold">{getStatusText(applicationStatus.status)}</span>
+                </p>
+                <p className="mt-2">
+                  <span className="font-medium">Payment: </span>
+                  <span className="font-bold uppercase">{paymentStatusText}</span>
                 </p>
                 {applicationStatus.status === 'rejected' && applicationStatus.rejectionReason && (
                   <p className="mt-2 text-sm">
@@ -796,7 +967,80 @@ const UserProfile = () => {
               </div>
             </div>
           )}
+
+          {canMakePayment && (
+            <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-2xl p-6 mt-8">
+              <div className="text-center">
+                <h3 className="text-yellow-400 font-semibold text-lg mb-2">
+                  Card Approved! Payment Required
+                </h3>
+                <p className="text-yellow-400/80 mb-4">
+                  Admin approved your card request. Please complete sandbox payment to download your card.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleMakePayment}
+                  disabled={isPaying}
+                  className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-xl font-medium hover:from-yellow-600 hover:to-amber-700 transition-all duration-200 shadow-lg hover:shadow-yellow-500/25 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center mx-auto"
+                >
+                  {isPaying ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Redirecting to Payment...
+                    </>
+                  ) : (
+                    'Make Payment (Sandbox)'
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {canDownloadCard && (
+            <div className="bg-blue-400/10 border border-blue-400/20 rounded-2xl p-6 mt-8">
+              <div className="text-center">
+                <h3 className="text-blue-400 font-semibold text-lg mb-2">
+                  Payment Complete
+                </h3>
+                <p className="text-blue-400/80 mb-4">
+                  Your payment is done. You can now download your library card.
+                </p>
+                <button
+                  type="button"
+                  onClick={downloadCardAsPDF}
+                  disabled={isDownloading}
+                  className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center mx-auto"
+                >
+                  {isDownloading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Downloading...
+                    </>
+                  ) : (
+                    'Download Library Card'
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </form>
+
+        {canDownloadCard && (
+          <div className="absolute -left-[9999px] -top-[9999px]" aria-hidden="true">
+            <div ref={cardFrontRef}>
+              <LCFront applicationData={applicationStatus} />
+            </div>
+            <div ref={cardBackRef}>
+              <LCBack applicationData={applicationStatus} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
