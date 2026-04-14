@@ -348,6 +348,10 @@ const sendPasswordResetEmail = async (userEmail, userName, resetToken) => {
 const sendApplicationApprovedEmail = async (userEmail, userName, application) => {
   try {
     const transporter = createTransporter();
+        const applicationId = application?.id || application?._id || 'N/A';
+        const reviewedDate = application?.reviewedAt
+            ? new Date(application.reviewedAt).toLocaleDateString()
+            : new Date().toLocaleDateString();
     
     const mailOptions = {
       from: {
@@ -355,14 +359,14 @@ const sendApplicationApprovedEmail = async (userEmail, userName, application) =>
         address: process.env.EMAIL
       },
       to: userEmail,
-      subject: '🎉 Library Card Application Approved!',
+            subject: 'Library Card Application Approved - Payment Required',
       html: `
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Application Approved</title>
+                        <title>Application Approved - Library Card Generator</title>
             <style>
                 body {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -381,23 +385,30 @@ const sendApplicationApprovedEmail = async (userEmail, userName, application) =>
                 }
                 .header {
                     text-align: center;
+                    border-bottom: 2px solid #e0e0e0;
                     padding-bottom: 20px;
                     margin-bottom: 30px;
-                    border-bottom: 2px solid #e0e0e0;
                 }
-                .success-badge {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 20px;
+                .logo {
+                    font-size: 28px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    margin-bottom: 10px;
+                }
+                .subtitle {
+                    color: #7f8c8d;
+                    font-size: 14px;
+                }
+                .status-box {
+                    background-color: #d4edda;
+                    border: 1px solid #c3e6cb;
+                    color: #155724;
+                    padding: 16px;
                     border-radius: 10px;
                     text-align: center;
                     margin: 20px 0;
                 }
-                .success-icon {
-                    font-size: 48px;
-                    margin-bottom: 10px;
-                }
-                .card-info {
+                .application-info {
                     background-color: #f8f9fa;
                     padding: 20px;
                     border-radius: 8px;
@@ -420,16 +431,24 @@ const sendApplicationApprovedEmail = async (userEmail, userName, application) =>
                 .value {
                     color: #2c3e50;
                 }
-                .next-steps {
+                .instructions {
                     background-color: #e8f4f8;
                     padding: 20px;
                     border-radius: 8px;
                     margin: 20px 0;
                     border-left: 4px solid #3498db;
                 }
+                .warning {
+                    background-color: #fff3cd;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border-left: 4px solid #ffc107;
+                    margin: 20px 0;
+                    font-size: 14px;
+                }
                 .footer {
                     text-align: center;
-                    margin-top: 30px;
+                    margin-top: 40px;
                     padding-top: 20px;
                     border-top: 1px solid #e0e0e0;
                     color: #7f8c8d;
@@ -440,33 +459,30 @@ const sendApplicationApprovedEmail = async (userEmail, userName, application) =>
         <body>
             <div class="container">
                 <div class="header">
-                    <h1 style="color: #2c3e50; margin: 0;">Library Card Generator</h1>
-                    <p style="color: #7f8c8d; margin: 5px 0 0 0;">Digital Library Services</p>
+                    <div class="logo">Library Card Generator</div>
+                    <div class="subtitle">Digital Library Services</div>
                 </div>
                 
-                <div class="success-badge">
-                    <div class="success-icon">✅</div>
-                    <h2 style="margin: 0 0 10px 0;">Congratulations!</h2>
-                    <p style="margin: 0; font-size: 16px;">Your Library Card Application Has Been Approved</p>
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">Application Approved</h2>
+                
+                <div class="status-box">
+                    <h3 style="margin: 0;">Your library card request is approved</h3>
+                    <p style="margin: 8px 0 0 0;">Payment is required before card download.</p>
                 </div>
                 
                 <p>Dear ${userName},</p>
                 
-                <p>We are pleased to inform you that your library card application has been <strong>approved</strong>! Your digital library card is now active and ready to use.</p>
+                <p>Good news! Your library card application has been <strong>approved</strong>. To activate card download, please complete the payment from your profile page.</p>
                 
-                <div class="card-info">
+                <div class="application-info">
                     <h3 style="margin-top: 0; color: #2c3e50;">Application Details</h3>
                     <div class="info-row">
                         <span class="label">Application ID:</span>
-                        <span class="value">${application._id}</span>
+                        <span class="value">${applicationId}</span>
                     </div>
                     <div class="info-row">
                         <span class="label">Student ID:</span>
                         <span class="value">${application.studentID}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Hall Name:</span>
-                        <span class="value">${application.hallName}</span>
                     </div>
                     <div class="info-row">
                         <span class="label">Status:</span>
@@ -474,36 +490,39 @@ const sendApplicationApprovedEmail = async (userEmail, userName, application) =>
                     </div>
                     <div class="info-row">
                         <span class="label">Reviewed On:</span>
-                        <span class="value">${new Date(application.reviewedAt).toLocaleDateString()}</span>
+                        <span class="value">${reviewedDate}</span>
                     </div>
                 </div>
                 
-                <div class="next-steps">
-                    <h3 style="margin-top: 0; color: #2c3e50;">What's Next?</h3>
+                <div class="instructions">
+                    <h3 style="margin-top: 0; color: #2c3e50;">What to do next</h3>
                     <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li>Your digital library card is now active</li>
-                        <li>You can access all library resources and services</li>
-                        <li>Download your library card from your profile</li>
-                        <li>Present your card when borrowing books</li>
-                        <li>Keep your profile information up to date</li>
+                        <li>Login to your account</li>
+                        <li>Open your profile page</li>
+                        <li>Click <strong>Make Payment</strong> (sandbox)</li>
+                        <li>After successful payment, click <strong>Download Library Card</strong></li>
                     </ul>
                 </div>
+
+                <div class="warning">
+                    <strong>Important:</strong> You can download your library card only after payment is completed.
+                </div>
                 
-                <p>Thank you for choosing our library services. We look forward to serving you!</p>
-                
-                <p style="margin-top: 30px;">If you have any questions, please don't hesitate to contact us.</p>
+                <p>If you face any issue during payment or download, please contact support.</p>
                 
                 <div class="footer">
-                    <p><strong>Library Card Generator</strong><br>
-                    Digital Library Services<br>
-                    Email: ${process.env.EMAIL}</p>
-                    <p style="margin-top: 10px;">This is an automated message. Please do not reply to this email.</p>
+                    <p>This email was sent regarding your approved library card application.</p>
+                    <p style="margin-top: 15px;">
+                        <strong>Library Card Generator</strong><br>
+                        Digital Library Services<br>
+                        Email: ${process.env.EMAIL}
+                    </p>
                 </div>
             </div>
         </body>
         </html>
       `,
-      text: `Dear ${userName},\n\nCongratulations! Your library card application has been APPROVED.\n\nApplication Details:\n- Application ID: ${application._id}\n- Student ID: ${application.studentID}\n- Hall Name: ${application.hallName}\n- Status: APPROVED\n- Reviewed On: ${new Date(application.reviewedAt).toLocaleDateString()}\n\nYour digital library card is now active and ready to use.\n\nBest regards,\nLibrary Card Generator Team`,
+      text: `Dear ${userName},\n\nYour library card application has been APPROVED.\n\nApplication Details:\n- Application ID: ${applicationId}\n- Student ID: ${application.studentID}\n- Status: APPROVED\n- Reviewed On: ${reviewedDate}\n\nNext Steps:\n1. Login to your account\n2. Go to profile page\n3. Make payment\n4. Download your library card\n\nImportant: Payment is required before card download.\n\nBest regards,\nLibrary Card Generator Team`,
       headers: {
         'X-Priority': '1',
         'X-MSMail-Priority': 'High',
