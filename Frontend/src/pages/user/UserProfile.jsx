@@ -60,6 +60,12 @@ const UserProfile = () => {
     'Meherpur', 'Narail', 'Chuadanga', 'Kushtia', 'Magura', 'Bagerhat', 'Jhenaidah',
     'Jhalokati', 'Patuakhali', 'Pirojpur', 'Barguna', 'Bhola'
   ];
+  const hallOptions = [
+    'Shahid Moshiur Rahman Hall',
+    'Munshi Meherullah Hall',
+    'Taposhi Rabeya Hall',
+    'Birprotik Taramon Bibi Hall',
+  ];
 
   // Calculate profile completion
   useEffect(() => {
@@ -852,15 +858,20 @@ const UserProfile = () => {
                 <label className="block text-sm font-medium text-white mb-2">
                   Hall Name *
                 </label>
-                <input
-                  type="text"
+                <select
                   name="hallName"
                   value={formData.hallName}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-[#598392]/10 border border-[#598392]/30 rounded-xl text-white placeholder-[#598392]/60 focus:outline-none focus:ring-2 focus:ring-[#598392]/50 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your hall name"
+                  className="w-full px-4 py-3 bg-[#598392]/10 border border-[#598392]/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#598392]/50 focus:border-transparent transition-all duration-200"
                   required
-                />
+                >
+                  <option value="" className="bg-[#01161e] text-white">Select your hall</option>
+                  {hallOptions.map((hall) => (
+                    <option key={hall} value={hall} className="bg-[#01161e] text-white">
+                      {hall}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Contact Number */}
