@@ -15,6 +15,9 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const PaymentDetail = require("./models/PaymentDetail");
 
 const app = express();
+const trimSlash = (url) => (url ? url.replace(/\/$/, "") : url);
+const FRONTEND_BASE_URL =
+  trimSlash(process.env.FRONTEND_URL) || "https://auto-card-just.vercel.app";
 
 const swaggerSpec = swaggerJsdoc(swaggerConfig);
 app.use(
@@ -89,10 +92,10 @@ app.post("/payment/success", async (req, res) => {
       );
     }
 
-    return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/profile`);
+    return res.redirect(`${FRONTEND_BASE_URL}/profile`);
   } catch (error) {
     console.error("Payment success callback error:", error);
-    return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/profile`);
+    return res.redirect(`${FRONTEND_BASE_URL}/profile`);
   }
 });
 
@@ -105,10 +108,10 @@ app.post("/payment/fail", async (req, res) => {
         { where: { transactionId } }
       );
     }
-    return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/profile`);
+    return res.redirect(`${FRONTEND_BASE_URL}/profile`);
   } catch (error) {
     console.error("Payment fail callback error:", error);
-    return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/profile`);
+    return res.redirect(`${FRONTEND_BASE_URL}/profile`);
   }
 });
 
@@ -121,10 +124,10 @@ app.post("/payment/cancel", async (req, res) => {
         { where: { transactionId } }
       );
     }
-    return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/profile`);
+    return res.redirect(`${FRONTEND_BASE_URL}/profile`);
   } catch (error) {
     console.error("Payment cancel callback error:", error);
-    return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/profile`);
+    return res.redirect(`${FRONTEND_BASE_URL}/profile`);
   }
 });
 

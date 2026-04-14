@@ -8,6 +8,8 @@ const store_id = process.env.SSLCOMMERZ_STORE_ID;
 const store_passwd = process.env.SSLCOMMERZ_STORE_PASSWORD;
 const is_live = false;
 
+const trimSlash = (url) => (url ? url.replace(/\/$/, "") : url);
+
 exports.makePayment = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
@@ -58,13 +60,23 @@ exports.makePayment = async (req, res) => {
       status: "pending",
     });
 
+    const forwardedProto = req.headers["x-forwarded-proto"];
+    const requestProto =
+      typeof forwardedProto === "string"
+        ? forwardedProto.split(",")[0]
+        : req.protocol;
+    const backendBase =
+      trimSlash(process.env.BACKEND_URL) ||
+      `${requestProto}://${req.get("host")}` ||
+      "https://auto-card-backend.vercel.app";
+
     const data = {
       total_amount: amount,
       currency: "BDT",
       tran_id: transactionId,
-      success_url: `${process.env.BACKEND_URL || "http://localhost:3000"}/payment/success`,
-      fail_url: `${process.env.BACKEND_URL || "http://localhost:3000"}/payment/fail`,
-      cancel_url: `${process.env.BACKEND_URL || "http://localhost:3000"}/payment/cancel`,
+      success_url: `${backendBase}/payment/success`,
+      fail_url: `${backendBase}/payment/fail`,
+      cancel_url: `${backendBase}/payment/cancel`,
       shipping_method: "NO",
       product_name: "Library Card",
       product_category: "Service",
