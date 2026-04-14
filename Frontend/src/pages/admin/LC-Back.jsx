@@ -1,4 +1,5 @@
 import React from 'react';
+import libraryImage from '../../assets/library.jpg';
 
 const LCBack = ({ applicationData }) => {
   // Use provided application data only
@@ -74,7 +75,7 @@ const LCBack = ({ applicationData }) => {
           <div className="flex-grow flex items-center justify-center mb-1">
             <div className="w-full">
               <img 
-                src="/src/assets/library.jpg"
+                src={libraryImage}
                 alt="Library Building" 
                 className="w-full h-40 object-cover rounded-sm"
               />

@@ -8,6 +8,7 @@ import LCFront from '../admin/LC-Front';
 import LCBack from '../admin/LC-Back';
 import domtoimage from 'dom-to-image-more';
 import { jsPDF } from 'jspdf';
+import { CheckCircle, CreditCard, Receipt, X } from 'lucide-react';
 
 const UserProfile = () => {
   const { user, updateUser } = useAuth();
@@ -36,8 +37,11 @@ const UserProfile = () => {
   const [hasApplication, setHasApplication] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [paymentStatusText, setPaymentStatusText] = useState('unpaid');
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingSlip, setIsDownloadingSlip] = useState(false);
   
   const photoInputRef = useRef(null);
   const signatureInputRef = useRef(null);
@@ -148,11 +152,13 @@ const UserProfile = () => {
         setApplicationStatus(response.application);
         setIsPaymentDone(!!response.isPaymentDone);
         setPaymentStatusText(response.paymentStatus || 'unpaid');
+        setPaymentDetails(response.payment || null);
       } else {
         setHasApplication(false);
         setApplicationStatus(null);
         setIsPaymentDone(false);
         setPaymentStatusText('unpaid');
+        setPaymentDetails(null);
       }
     } catch (error) {
       console.error('Error checking application status:', error);
@@ -161,6 +167,7 @@ const UserProfile = () => {
       setApplicationStatus(null);
       setIsPaymentDone(false);
       setPaymentStatusText('unpaid');
+      setPaymentDetails(null);
     }
   };
 
@@ -323,6 +330,90 @@ const UserProfile = () => {
       showToast.error('Failed to download card. Please try again.');
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const downloadPaymentSlip = async () => {
+    if (!paymentDetails || !applicationStatus) {
+      showToast.error('Payment details not found');
+      return;
+    }
+
+    setIsDownloadingSlip(true);
+    try {
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const now = new Date();
+
+      const logoDataUrl = await new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } catch (e) {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = '/logo.png';
+      });
+
+      if (logoDataUrl) {
+        doc.addImage(logoDataUrl, 'PNG', 90, 8, 30, 30);
+      }
+
+      doc.setFontSize(18);
+      doc.text('Library Card Payment Slip', 105, 50, { align: 'center' });
+
+      doc.setFontSize(11);
+      doc.text('Jashore University of Science and Technology', 105, 57, { align: 'center' });
+
+      doc.setDrawColor(160, 160, 160);
+      doc.line(15, 63, 195, 63);
+
+      let y = 73;
+      const row = (label, value) => {
+        doc.setFont(undefined, 'bold');
+        doc.text(`${label}:`, 18, y);
+        doc.setFont(undefined, 'normal');
+        doc.text(String(value || '-'), 70, y);
+        y += 9;
+      };
+
+      row('Slip Date', now.toLocaleString());
+      row('Student Name', applicationStatus.name);
+      row('Student ID', applicationStatus.studentID);
+      row('Department', applicationStatus.department);
+      row('Application ID', applicationStatus.id);
+      row('Transaction ID', paymentDetails.transactionId);
+      row('Amount', `BDT ${paymentDetails.amount}`);
+      row('Currency', paymentDetails.currency || 'BDT');
+      row('Payment Status', paymentDetails.status || paymentStatusText);
+      row('Gateway', paymentDetails.gateway || 'SSLCommerz-Sandbox');
+      row(
+        'Paid At',
+        paymentDetails.paidAt
+          ? new Date(paymentDetails.paidAt).toLocaleString()
+          : '-'
+      );
+
+      doc.line(15, y + 4, 195, y + 4);
+      doc.setFontSize(10);
+      doc.text('This is a system-generated payment slip.', 18, y + 12);
+
+      const fileName = `PaymentSlip_${applicationStatus.studentID}_${paymentDetails.transactionId}.pdf`;
+      doc.save(fileName);
+      showToast.success('Payment slip downloaded');
+    } catch (error) {
+      console.error('Slip download error:', error);
+      showToast.error('Failed to download payment slip');
+    } finally {
+      setIsDownloadingSlip(false);
     }
   };
 
@@ -1000,36 +1091,107 @@ const UserProfile = () => {
           )}
 
           {canDownloadCard && (
-            <div className="bg-blue-400/10 border border-blue-400/20 rounded-2xl p-6 mt-8">
+            <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-2xl p-6 mt-8">
               <div className="text-center">
-                <h3 className="text-blue-400 font-semibold text-lg mb-2">
+                <h3 className="text-yellow-400 font-semibold text-lg mb-2 flex items-center justify-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
                   Payment Complete
                 </h3>
-                <p className="text-blue-400/80 mb-4">
+                <p className="text-yellow-400/80 mb-4">
                   Your payment is done. You can now download your library card.
                 </p>
-                <button
-                  type="button"
-                  onClick={downloadCardAsPDF}
-                  disabled={isDownloading}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center mx-auto"
-                >
-                  {isDownloading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Downloading...
-                    </>
-                  ) : (
-                    'Download Library Card'
-                  )}
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={downloadCardAsPDF}
+                    disabled={isDownloading}
+                    className="px-8 py-3 bg-gradient-to-r from-[#598392] to-[#124559] text-white rounded-xl font-medium hover:from-[#124559] hover:to-[#598392] transition-all duration-200 shadow-lg hover:shadow-[#598392]/25 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    {isDownloading ? 'Downloading Card...' : 'Download Library Card'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentModal(true)}
+                    className="px-8 py-3 bg-[#0f3a46]/60 border border-[#598392]/30 text-[#9ac1cd] rounded-xl font-medium hover:bg-[#0f3a46]/80 transition-all duration-200 shadow-lg hover:shadow-[#598392]/20 transform hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <Receipt className="w-5 h-5" />
+                    Payment Details
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </form>
+
+        {showPaymentModal && paymentDetails && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-[#01161e] border border-[#598392]/30 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Receipt className="w-5 h-5 text-[#598392]" />
+                  Payment Details
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentModal(false)}
+                  className="text-[#598392] hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="bg-[#0f3a46]/40 border border-[#598392]/20 rounded-xl p-4 space-y-3">
+                <div className="flex justify-between gap-3">
+                  <span className="text-[#598392]/80">Transaction ID</span>
+                  <span className="text-white text-right break-all">{paymentDetails.transactionId || '-'}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[#598392]/80">Amount</span>
+                  <span className="text-white">BDT {paymentDetails.amount || '100'}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[#598392]/80">Currency</span>
+                  <span className="text-white">{paymentDetails.currency || 'BDT'}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[#598392]/80">Status</span>
+                  <span className="text-green-400 uppercase font-semibold">{paymentDetails.status || paymentStatusText}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[#598392]/80">Gateway</span>
+                  <span className="text-white">{paymentDetails.gateway || 'SSLCommerz-Sandbox'}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[#598392]/80">Paid At</span>
+                  <span className="text-white text-right">
+                    {paymentDetails.paidAt ? new Date(paymentDetails.paidAt).toLocaleString() : '-'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentModal(false)}
+                  className="px-5 py-2.5 bg-[#0f3a46]/60 border border-[#598392]/30 text-[#9ac1cd] rounded-lg hover:bg-[#0f3a46]/80 transition-all"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadPaymentSlip}
+                  disabled={isDownloadingSlip}
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#598392] to-[#124559] text-white rounded-lg hover:from-[#124559] hover:to-[#598392] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Receipt className="w-4 h-4" />
+                  {isDownloadingSlip ? 'Downloading Slip...' : 'Download Payment Slip'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {canDownloadCard && (
           <div className="absolute -left-[9999px] -top-[9999px]" aria-hidden="true">
